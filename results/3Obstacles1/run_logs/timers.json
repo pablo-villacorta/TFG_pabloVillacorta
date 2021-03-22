@@ -1,0 +1,47 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1615740624",
+        "python_version": "3.7.9 (tags/v3.7.9:13c94747c7, Aug 17 2020, 18:58:18) [MSC v.1900 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\pablo\\Documents\\Universidad\\TFG\\venv_tfg\\Scripts\\mlagents-learn config/basic_config.yaml --run-id=3Obstacles1",
+        "mlagents_version": "0.24.0",
+        "mlagents_envs_version": "0.24.0",
+        "communication_protocol_version": "1.4.0",
+        "pytorch_version": "1.7.1+cu110",
+        "numpy_version": "1.20.1",
+        "end_time_seconds": "1615740638"
+    },
+    "total": 13.952932700000002,
+    "count": 1,
+    "self": 0.012015500000003954,
+    "children": {
+        "run_training.setup": {
+            "total": 0.5539674999999997,
+            "count": 1,
+            "self": 0.5539674999999997
+        },
+        "TrainerController.start_learning": {
+            "total": 13.386949699999999,
+            "count": 1,
+            "self": 0.0005391999999986297,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 13.380971200000001,
+                    "count": 1,
+                    "self": 13.380971200000001
+                },
+                "trainer_threads": {
+                    "total": 2.2999999984563146e-06,
+                    "count": 1,
+                    "self": 2.2999999984563146e-06
+                },
+                "TrainerController._save_models": {
+                    "total": 0.00543700000000058,
+                    "count": 1,
+                    "self": 0.00543700000000058
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 100001,
+                "file_path": "results\\BasicRotationObstacleMultiple3\\BasicAgent\\BasicAgent-100001.onnx",
+                "reward": 92.87368503369783,
+                "creation_time": 1615724762.8789923
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 100001,
+            "file_path": "results\\BasicRotationObstacleMultiple3\\BasicAgent.onnx",
+            "reward": 92.87368503369783,
+            "creation_time": 1615724762.8789923
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 1338,
+                "file_path": "results\\Basic5\\BasicAgent\\BasicAgent-1338.onnx",
+                "reward": -27.300007820129395,
+                "creation_time": 1615114063.4748635
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1338,
+            "file_path": "results\\Basic5\\BasicAgent.onnx",
+            "reward": -27.300007820129395,
+            "creation_time": 1615114063.4748635
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}
