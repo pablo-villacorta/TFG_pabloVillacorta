@@ -1,0 +1,23 @@
+{
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 162037,
+                "file_path": "results\\Moving3Obstacles4Stacking1\\BasicAgent\\BasicAgent-162037.onnx",
+                "reward": null,
+                "creation_time": 1616663417.5855405
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 162037,
+            "file_path": "results\\Moving3Obstacles4Stacking1\\BasicAgent.onnx",
+            "reward": null,
+            "creation_time": 1616663417.5855405
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}

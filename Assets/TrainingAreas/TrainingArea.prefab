@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4715676594694345985}
   - component: {fileID: 8870926888737785858}
   - component: {fileID: 396832873053442441}
+  - component: {fileID: 637739240355978361}
   m_Layer: 0
   m_Name: Obstacle (1)
   m_TagString: obstacle
@@ -95,6 +96,22 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &637739240355978361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3024824891504085119}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d7dc677e824aa49a8bd0269509162d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  z: 5
+  initialX: 7
+  xStep: -0.1
+  startsMoving: 0
 --- !u!1 &4313351782450650200
 GameObject:
   m_ObjectHideFlags: 0
@@ -107,6 +124,7 @@ GameObject:
   - component: {fileID: 5514202293485355537}
   - component: {fileID: 4791569668305002357}
   - component: {fileID: 336856838532648268}
+  - component: {fileID: 6525124074411557777}
   m_Layer: 0
   m_Name: Obstacle (2)
   m_TagString: obstacle
@@ -190,6 +208,22 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &6525124074411557777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4313351782450650200}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d7dc677e824aa49a8bd0269509162d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  z: -5
+  initialX: -7
+  xStep: 0.1
+  startsMoving: 0
 --- !u!1 &6902776319690803427
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,7 +493,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 4e5ae3ea3ed8d114ba09b89305edfc29, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: BasicAgent
@@ -484,9 +518,10 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
   targetTransform: {fileID: 6902776321775856939}
-  obstacleTransform: {fileID: 6902776320946535976}
-  obstacle1Transform: {fileID: 7763025510141122680}
-  obstacle2Transform: {fileID: 3290635395185101082}
+  obstacles:
+  - {fileID: 6902776320946535983}
+  - {fileID: 3024824891504085119}
+  - {fileID: 4313351782450650200}
 --- !u!114 &6902776320027352432
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -524,7 +559,7 @@ MonoBehaviour:
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
-  m_ObservationStacks: 1
+  m_ObservationStacks: 4
   rayHitColor: {r: 1, g: 0, b: 0, a: 1}
   rayMissColor: {r: 1, g: 1, b: 1, a: 1}
   m_StartVerticalOffset: 0
@@ -861,6 +896,7 @@ GameObject:
   - component: {fileID: 6902776320946535979}
   - component: {fileID: 6902776320946535978}
   - component: {fileID: 6902776320946535977}
+  - component: {fileID: 6023634608617973289}
   m_Layer: 0
   m_Name: Obstacle
   m_TagString: obstacle
@@ -944,6 +980,22 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &6023634608617973289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6902776320946535983}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d7dc677e824aa49a8bd0269509162d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  z: 0
+  initialX: -7
+  xStep: 0.1
+  startsMoving: 1
 --- !u!1 &6902776321775856938
 GameObject:
   m_ObjectHideFlags: 0

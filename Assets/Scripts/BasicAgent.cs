@@ -9,15 +9,11 @@ public class BasicAgent : Agent
 {
 
     public Transform targetTransform;
-    public Transform obstacleTransform;
-    public Transform obstacle1Transform;
-    public Transform obstacle2Transform;
+
+    public List<GameObject> obstacles;
 
     private Rigidbody rBody;
     private float agentRunSpeed = 5f;
-
-    private int totalReaches = 0;
-    
 
     void Start()
     {
@@ -27,8 +23,13 @@ public class BasicAgent : Agent
     public override void Initialize()
     {
         this.MaxStep = 5000;
-        obstacle1Transform.position = new Vector3(100000, 100000, 100000);
-        obstacle2Transform.position = new Vector3(100000, 100000, 100000);
+
+        // apartar todos los obstaculos salvo el primero
+        for (int i = 1; i < obstacles.Count; i++)
+        {
+            var old = obstacles[i].transform.position;
+            obstacles[i].transform.position = new Vector3(100000, old.y, old.z);
+        }
     }
 
     public override void OnEpisodeBegin()
@@ -47,7 +48,6 @@ public class BasicAgent : Agent
 
         // Agent rotation
         sensor.AddObservation(transform.localRotation.y);
-        //Debug.Log("y-rotation=" + transform.localRotation.y);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -72,11 +72,9 @@ public class BasicAgent : Agent
                 break;
             case 3:
                 rotateDir = transform.up * 1f;
-                //dirToGo = transform.right * 1f;
                 break;
             case 4:
                 rotateDir = transform.up * -1f;
-                //dirToGo = transform.right * -1f;
                 break;
         }
         transform.Rotate(rotateDir, Time.deltaTime * 150f);
@@ -109,7 +107,6 @@ public class BasicAgent : Agent
     {
         if (other.CompareTag("target"))
         {
-            totalReaches += 1;
             SetReward(100f);
             EndEpisode();
         }
@@ -127,18 +124,13 @@ public class BasicAgent : Agent
 
     private void SpawnObstacles()
     {
-        obstacleTransform.localPosition = new Vector3(Random.Range(-7, 7), 1.5f, 0f);
-        //if (totalReaches > 100)
-        //{
-        //    obstacle2Transform.localPosition = new Vector3(Random.Range(-7, 7), 1.5f, -5f);
-        //    if (totalReaches > 300)
-        //    {
-        //        obstacle1Transform.localPosition = new Vector3(Random.Range(-7, 7), 1.5f, 5f);
-        //    }
-        //}
-        obstacle2Transform.localPosition = new Vector3(Random.Range(-7, 7), 1.5f, -5f);
-        obstacle1Transform.localPosition = new Vector3(Random.Range(-7, 7), 1.5f, 5f);
-
+        int activeObstacles = (int) Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f);
+        
+        for (int i = 0; i <  activeObstacles; i++)
+        {
+            var old = obstacles[i].transform.localPosition;
+            obstacles[i].transform.localPosition = new Vector3(Random.Range(-7, 7), old.y, old.z);
+        }
     }
 
 }
