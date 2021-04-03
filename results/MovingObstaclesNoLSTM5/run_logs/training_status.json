@@ -1,0 +1,26 @@
+{
+    "active_obstacles": {
+        "lesson_num": 0
+    },
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 357,
+                "file_path": "results\\MovingObstaclesNoLSTM5\\BasicAgent\\BasicAgent-357.onnx",
+                "reward": null,
+                "creation_time": 1617464424.6921303
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 357,
+            "file_path": "results\\MovingObstaclesNoLSTM5\\BasicAgent.onnx",
+            "reward": null,
+            "creation_time": 1617464424.6921303
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}

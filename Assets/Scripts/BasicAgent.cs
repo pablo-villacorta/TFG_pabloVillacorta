@@ -25,7 +25,7 @@ public class BasicAgent : Agent
         this.MaxStep = 5000;
 
         // apartar todos los obstaculos salvo el primero
-        for (int i = 1; i < obstacles.Count; i++)
+        for (int i = 0; i < obstacles.Count; i++)
         {
             var old = obstacles[i].transform.position;
             obstacles[i].transform.position = new Vector3(100000, old.y, old.z);
@@ -124,13 +124,13 @@ public class BasicAgent : Agent
 
     private void SpawnObstacles()
     {
-        int activeObstacles = (int) Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 1.0f);
+        int activeObstacles = (int) Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f);
         
         for (int i = 0; i <  activeObstacles; i++)
         {
-            //obstacles[i].GetComponent<MovingObstacle>().Spawn();
-            var old = obstacles[i].transform.localPosition;
-            obstacles[i].transform.localPosition = new Vector3(Random.Range(-7, 7), old.y, old.z);
+            obstacles[i].GetComponent<MovingObstacle>().Spawn();
+            //var old = obstacles[i].transform.localPosition;
+            //obstacles[i].transform.localPosition = new Vector3(Random.Range(-7, 7), old.y, old.z);
         }
     }
 

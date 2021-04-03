@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.MLAgents;
+using Unity.MLAgents.Sensors;
+using Unity.MLAgents.Actuators;
 
 public class MovingObstacle : MonoBehaviour
 {
@@ -9,7 +12,7 @@ public class MovingObstacle : MonoBehaviour
 
     public float z = 0f;
     public float initialX = minX;
-    public float xStep = 0.1f;
+    private float xStep = 0.1f;
 
     public bool startsMoving = false;
     private bool moving = false;
@@ -30,7 +33,9 @@ public class MovingObstacle : MonoBehaviour
 
     public void Spawn()
     {
-        xStep = Random.value > 0.5f ? -0.1f: 0.1f;
+        float maxStep = Academy.Instance.EnvironmentParameters.GetWithDefault("max_obstacle_speed", 1.0f);
+        maxStep = 0.15f;
+        xStep = Random.Range(-maxStep, maxStep);
         initialX = xStep > 0 ? minX : maxX;
         transform.localPosition = new Vector3(initialX, 1.5f, z);
         moving = true;

@@ -25,12 +25,20 @@ behaviors:
 environment_parameters:
   active_obstacles:
     curriculum:
-      - name: OneObstacle # The '-' is important as this is a list
+      - name: NoObstacles # The '-' is important as this is a list
         completion_criteria:
           measure: reward
           behavior: BasicAgent
           signal_smoothing: true
           min_lesson_length: 100
+          threshold: 50.0
+        value: 0.0
+      - name: OneObstacle # The '-' is important as this is a list
+        completion_criteria:
+          measure: reward
+          behavior: BasicAgent
+          signal_smoothing: true
+          min_lesson_length: 450
           threshold: 95.0
         value: 1.0
       - name: TwoObstacles # This is the start of the second lesson
@@ -38,9 +46,29 @@ environment_parameters:
           measure: reward
           behavior: BasicAgent
           signal_smoothing: true
-          min_lesson_length: 100
-          threshold: 95.0
+          min_lesson_length: 450
+          threshold: 91.0
           require_reset: true
         value: 2.0
       - name: ThreeObstacles
         value: 3.0
+  max_obstacle_speed:
+    curriculum:
+      - name: OnlySlowObstacles
+        completion_criteria:
+          measure: progress
+          behavior: BasicAgent
+          signal_smoothing: true
+          min_lesson_length: 200
+          threshold: 0.075
+        value: 0.05
+      - name: SlowMediumObstacles
+        completion_criteria:
+          measure: progress
+          behavior: BasicAgent
+          signal_smoothing: true
+          min_lesson_length: 200
+          threshold: 0.2
+        value: 0.15
+      - name: AllObstacles
+        value: 0.3
