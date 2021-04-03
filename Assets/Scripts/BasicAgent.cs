@@ -112,22 +112,23 @@ public class BasicAgent : Agent
         }
         else if (other.CompareTag("wall"))
         {
-            SetReward(-10f);
+            SetReward(-30f);
             EndEpisode();
         }
         else if (other.CompareTag("obstacle"))
         {
-            SetReward(-10f);
+            SetReward(-30f);
             EndEpisode();
         }
     }
 
     private void SpawnObstacles()
     {
-        int activeObstacles = (int) Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f);
+        int activeObstacles = (int) Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 1.0f);
         
         for (int i = 0; i <  activeObstacles; i++)
         {
+            //obstacles[i].GetComponent<MovingObstacle>().Spawn();
             var old = obstacles[i].transform.localPosition;
             obstacles[i].transform.localPosition = new Vector3(Random.Range(-7, 7), old.y, old.z);
         }

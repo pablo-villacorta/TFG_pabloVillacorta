@@ -1,0 +1,26 @@
+{
+    "active_obstacles": {
+        "lesson_num": 2
+    },
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 131318,
+                "file_path": "results\\CurriculumLearningHarderPunishments1\\BasicAgent\\BasicAgent-131318.onnx",
+                "reward": null,
+                "creation_time": 1617463015.9118366
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 131318,
+            "file_path": "results\\CurriculumLearningHarderPunishments1\\BasicAgent.onnx",
+            "reward": null,
+            "creation_time": 1617463015.9118366
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}
