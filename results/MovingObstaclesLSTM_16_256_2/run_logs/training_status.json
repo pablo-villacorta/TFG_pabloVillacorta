@@ -1,0 +1,29 @@
+{
+    "active_obstacles": {
+        "lesson_num": 1
+    },
+    "max_obstacle_speed": {
+        "lesson_num": 2
+    },
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 151494,
+                "file_path": "results\\MovingObstaclesLSTM_16_256_2\\BasicAgent\\BasicAgent-151494.onnx",
+                "reward": null,
+                "creation_time": 1617535503.0151925
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 151494,
+            "file_path": "results\\MovingObstaclesLSTM_16_256_2\\BasicAgent.onnx",
+            "reward": null,
+            "creation_time": 1617535503.0151925
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}

@@ -1,39 +1,64 @@
-# Obstáculos móviles - no LSTM no additional layers
+# Obstáculos móviles - Probando LSTM
 
-Manteniendo el esquema de castigos de la última versión, pruebo a retar al agente (con exactamente la misma configuración que para los obstáculos estáticos) a hacer lo mismo con obstáculos móviles (usando CL, por lo que empieza con un solo obstáculo). Es importante recalcar que los obstáculos móviles tienen todos exactamente la **misma velocidad** (en términos absoultos, claro). Los obstáculos se mueven o hacia la izquierda o hacia la derecha.
+He hecho las modificaciones necesarias en el config.yaml para habilitar el uso de redes recurrentes (LSTM). Mi configuración inicial es la siguiente:
 
-## Todos los obstáculos tienen la misma velocidad
+```yaml
+network_settings:
+      normalize: false
+      hidden_units: 128
+      num_layers: 2
+      use_recurrent: true
+      sequence_length: 16
+      memory_size: 256
+```
 
-RUN-ID: MovingObstaclesNoLSTM2 (el 1 fue un fail mio, irrelevante).
+Consecuentemente (y en principio), al poner sequence_length = 16 estoy haciendo que la NN recuerde las últimas 16 observaciones, de forma que debería bastarle para poder intuir la velocidad del obstáculo que tiene delante. Para este RUN utilizo la misma versión que la de la versión anterior (la velocidad máxima de los obstáculos establecida por el CL se sobreescribe para poner una fija, 0.15, para poder sacar conclusiones más facilmente).
 
-Tras 50.000 pasos no ha conseguido ni una vez llegar al otro lado. Cambio de estrategia: añado una lesson nueva al CL, haciendo un stage previo con 0 obstáculos para que sepa qué hacer. Veremos qué ocurre.
+RUN-ID: MovingObstaclesLSTM_16_256_1
 
-RUN-ID: MovingObstaclesNoLSTM6 <- este tiene buenos graficos de CL en el tensorboard
+Con un obstáculo, se nota que el agente aprende más despacio. Pero aprende, poco a poco va consiguiendo más recompensa media, tras 50k pasos ronda los 85. Pero esto no tiene mucho mérito ya que la versión sin LSTM conseguía resultados similares sin hacer uso de ningún tipo de memoria. La clave está en los dos obstáculos.
 
-Con esta estrategia hemos conseguido el objetivo inicial. Tras menos de 15.000 pasos ya hemos conseguido algo que, con un obstáculo, es capaz de llegar a 50 puntos de media, y subiendo. La clave está en decirle al agente, sin ningún tipo de obstáculo, que esto va de llegar al otro lado. Luego ya meteremos stuff adicional. Pero la base es esa. Tras unos 30k pasos, pasamos a la fase 2 -> 2 obstáculos. La media baja sustancialmente (hasta 58 puntos con 2 obstaculos). Sin embargo, le cuesta mucho avanzar, una vez ha llegado a los 85 de media. Está bastante atascado, llevamos ya 110k pasos y no parece que vayamos a llegar a los 95 puntos que marcan el cambio de fase. Creo que nos va a tocar tirar de LSTM o de redes más profundas. De todos modos lo voy a dejar entrenando un rato más.
+Observamos un bajonazo importante, bajamos hasta los 56 puntos con dos obstáculos. Subrayar que, a diferencia de como ocurría con versiones anteriores, el agente no decide únicamente ir hacia delante o esperar, sino que hace uso extensivo de los giros para evitar obstáculos, especialmente cuando son lentos.
 
-Vaya. Me ha pasado a la última fase, pero no porque haya mejorado, sino porque, en el yaml de configuración, la duración de las fases del CL está puesta a 100 episodios, lo que es poco en mi opinión, así que, si tiene un poco de suerte, es posible que saque una secuencia de 100 episodios relativamente sencillos y que saque de media más de 95, para pasar a la siguiente fase, aunque no se lo "merezca" el agente en realidad. Al meterle 3 obstáculos móviles, se vuelve a apreciar el bajonazo: bajamos hasta los 59, aunque se recupera para llegar a los 70 y pico. Lo dejo un rato entrenando y vuelvo para ver si consigue mejorar sustancialmente. Aprovecho este pequeño error para poner duraciones minimas de cada lesson mas largas: 450 para los que tienen algun obstaculo y 200 para el "libre" inicial (sin obstaculos), para que los cambios de fase sean más "correctos" y convenientes (evitar que sean prematuros).
+El agente es bastante inconsistente de momento. Tras 145k pasos, parecía que iba a empezar a subir (ha llegado a los 64 puntos), pero después ha bajado hasta los 48. Posteriormente vuelve a subir hasta los 63, pero parece que de ahí no pasa. Lo voy a dejar 10 minutos más, si veo que no consigue avanzar notablemente, paro y duplico memory_size (igual, aunque tenga 16 observaciones, no tiene suficiente memoria para retenerlas todas - no sé muy bien cómo funciona eso).
 
-He vuelto. Tras 300k pasos, conseguimos una media de unos 83 puntos (lo que no está nada mal, teniendo en cuenta que el agente no tiene ningún tipo de memoria). También hay que tener en cuenta que todas las velocidades de los obstáculos son las mismas, por lo que la NN puede aprender los "tiempos" de espera, sin tener que llegar a pillar la velocidad de cada obstáculo en cada momento. Voy a repetir el experimento, aleatorizando un poco las velocidades de los obstáculos, para ver si mi teoría se confirma y el agente tiene peor rendimiento. Puntación máxima obtenida: 88
+Tras 330k pasos, ha consguido un máximo de 77, que no está mal, pero es un poco decepcionante. Paro el entrenamiento, importo el modelo y lo ejecuto realizando inferencia para ver si soy capaz de identificar en qué situaciones falla (y qué comportamientos negativos/positivos tiene el modelo).
 
-## La velocidad de los obstáculos está ligeramente aleatorizada
+No estoy muy seguro de esto, pero creo que es posible que, cuando el primer obstáculo "tapa" al segundo, aunque el agente sea capaz de pasar el primer obstáculo, se piensa que el segundo tiene la misma velocidad que el primero, haciendo que se choque con él. El agente también presenta deficiencias que no se mostraban antes, como el chocarse con las paredes laterales o incluso cometer "suicidio", al darse la vuelta y chocar con la pared del fondo nada más empezar.
 
-Ahora he añadido una propiedad pública estática a la clase MovingObstacle, maxStep = 0.35f. Cada vez que se haga spawn del objeto (onEpidodeBegin), se asignará a la velocidad del obstáculo (xStep) un valor entre -maxStep y maxStep [-0.35f, 0.35f).
+Otra cosa que he visto es que a veces el agente pasa un primer obstáculo, pero se para demasiado pronto, y se queda a la misma altura que el obstáculo que acaba de librar. Consecuentemente, si se queda esperando, se acabará chocando con el primero obstáculo. Para evitar esto, he modificado los ángulos de los rayos, para que sean 90º a cada lado, de forma que el agente tenga visión lateral y pueda ver venir los obstáculos que están a sus lados. No he modificado la cantidad de rayos por cada dirección (sigue siendo 6). **Me acabo de dar cuenta de que llevo varias versiones con 4 stacked raycast sensors, lo que le ha estado dando memoria todo este tiempo al agente :((((((**.
 
-RUN-ID: MovingObstaclesNoLSTM7
+Lo primero que hago es hacer que vuelva a ser 1 stacked raycast sensors. Vuelvo a lanzar el entrenamietno, a ver si esta vez se aprecia algo más de mejoría (al menos, debería aprender bastante más rápido, al tener un vector de entrada 4 veces más reducido).
 
-Le está costando arrancar bastante más que al anterior (se ve bien en el gráfico), al menos durante los primeros 50k steps. Sin embargo, hay esperanzas. Veo cómo el agente ha aprendido a esperar (en los obstáculos que son más lentos se ve claramente cómo espera a que pase). Probablemente en el anterior tmb lo hiciera, pero aquí se puede ver mucho más claro al tener velocidades tan distintas. Otra cosa que recalco es que apenas gira. Como sabe que el obstáculo se va a acabar apartando, prefiere esperar antes que rodearlo (esto es muy útil cuando los obstáculos son rápidos, que es lo que sucede el 95% de las veces). Sin embargo, esto tiene una pega. Cuando la velocidad del obstáculo es muy cercana a cero (el obstáculo apenas se mueve), el agente se encuentra ante una situación desconocida: si se queda esperando a que el obstáculo pase, se le agotará el tiempo (máximo numero de pasos / episodio), pero no ha aprendido a rodear el obstáculo. Igual habría que tirar de CL y empezar con velocidades más lentas, e ir aumentándolas poco a poco (primero que aprenda a rodear, después a esperar).
+RUN-ID: MovingObstaclesLSTM_16_256_2
 
-A todo esto, llevamos 125k pasos y el agente todavía no ha llegado a los 80 de media. Claramente el proceso de aprendizaje es más lento que en el caso anterior (la comparación en tensorboard no deja lugar a dudas). Vamos por los 200k y lo mejor que hemos conseguido ha sido 87 y una media overall de 85. Voy a pararlo, y modificar la estrategia de CL para que incremente progresivamente la velocidad de los obstáculos (para que primero aprenda a rodear, despues a esperar). Añado un segundo parametro, max_obstacle_speed en el config.yaml para ir modificando la velocidad máxima en cada momento.
+Empiezo a pensar que quizás la lesson de un único obstáculo debería ser más corta, ya que al final parece que el agente aprende a ir recto y esperar, únicamente. Veremos.
 
-### La velocidad de los obstáculos se rige gracias al CL
+Un desastre. Tras 150k pasos, no ha conseguido los 95 de media necesarios para pasar a la siguiente lesson (2 obstáculos). Modifico la duración de esta lesson para que sea más asequible.
 
-Teniendo 3 lessons -> solo lentos; lentos + medios; todos
+````yaml
+- name: OneObstacle # The '-' is important as this is a list
+        completion_criteria:
+          measure: reward
+          behavior: BasicAgent
+          signal_smoothing: true
+          min_lesson_length: 450
+          threshold: 85.0
+        value: 1.0
+````
 
-RUN-ID: MovingObstaclesNoLSTM14
+RUN-ID: MovingObstaclesLSTM_16_256_3
 
-A diferencia del parametro de máximos obstáculos, este parametro (max_obstacle_speed) avanza a medida que progresa el entrenameinto (% de steps máximos ejecutados), y no por su reward (de esta forma, pueden ir de forma independiente los dos parametros).
+Tras 50k pasos ya tenemos dos obstáculos. Hemos pegado un bajonzado similar al del principio, ahora con 51 puntos. Veremos si consigue mejorar (no parece). Si esto no funciona creo que el siguiente paso va a ser meter más complejidad a la red. Si no funciona, podemos probar a meter más capacidades LSTM y que se combine con el aumento del número de capas.
 
-Otra cosa importante. He reducido el porcentaje de reward necesario para introducir el primer obstáculo. Mi idea es que,si dejamos al agente demasiado tiempo en un espacio sin obstaculos, se va a pensar que con ir recto hasta el final basta. Y si pasa eso, luego es posible que le cueste más aprender a esquivar y hacer otras cosas. Solo necesita la "intuición" inicial esa de que tiene que ir hacia lo rojo, no queremos que se vuelva un maestro de ir en línea recta.
+Fracaso. Tras 320k pasos, la media no supera los 77 puntos (una máxima de 83, muy outlier). Paro y pruebo a meter más capas (ya para la siguiente versión).
 
-No sé muy bien por qué, pero con esta estrategia no funciona. Y aunque dejemos de regirlo con el CL (sobreescribiendo el valor recibido del CL), no consigue nada decente. Creo que lo mejor va a ser dejar a un lado esta estrategia y probar con LSTM y ver si nos da mejores resultados. Si no, igual toca pararse a pensar qué puede estar fallando (pensar bien lo de esperar / rodear, puede que ahí esté la clave, aunque debería ser el agente el que la deduzca en principio)
+#### Reflexiones 
+
+Cosas que pueden estar obstaculizando el correcto aprendizaje del agente:
+
+- Poco LSTM :arrow_right: meter más sequence_length y memory_size
+- Demasiado LSTM (entrenamiento muy lento) :arrow_right: lo contrario a lo anterior
+- Poca complejidad de la NN (con las pocas capas que tiene no le da para desarrollar comportamientos lo suficientemente complejos) :arrow_right: meter más capas intermedias
+- Los rayos no aportan suficiente información como para poder distinguir las velocidades de diferentes obstáculos. Esto creo que es un problema que con los rayos es inevitable. Sin embargo, quizás sea posible resolverlo a base de meter más capas. Otra posible solución podría ser meter más rayos, pero no estoy seguro de que esto pueda ayudar.
+- Igual podemos probar a hacer entrenar con obstáculos más lentos, y una vez que sabemos que funciona, meter más velocidad **poco a poco**

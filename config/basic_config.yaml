@@ -14,6 +14,9 @@ behaviors:
       normalize: false
       hidden_units: 128
       num_layers: 2
+      use_recurrent: true
+      sequence_length: 16
+      memory_size: 256
     reward_signals:
       extrinsic:
         gamma: 0.99
@@ -39,7 +42,7 @@ environment_parameters:
           behavior: BasicAgent
           signal_smoothing: true
           min_lesson_length: 450
-          threshold: 95.0
+          threshold: 85.0
         value: 1.0
       - name: TwoObstacles # This is the start of the second lesson
         completion_criteria:
