@@ -42,7 +42,7 @@ environment_parameters:
           behavior: BasicAgent
           signal_smoothing: true
           min_lesson_length: 450
-          threshold: 85.0
+          threshold: 75.0
         value: 1.0
       - name: TwoObstacles # This is the start of the second lesson
         completion_criteria:

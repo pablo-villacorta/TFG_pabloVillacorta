@@ -53,7 +53,9 @@ public class BasicAgent : Agent
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         MoveAgent(actionBuffers.DiscreteActions);
-        AddReward(-0.01f);
+        float multiplier = 1f;
+        if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) > 0) multiplier = 10f;
+        AddReward(-0.01f * multiplier);
     }
 
     public void MoveAgent(ActionSegment<int> act)
@@ -124,7 +126,7 @@ public class BasicAgent : Agent
 
     private void SpawnObstacles()
     {
-        int activeObstacles = (int) Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f);
+        int activeObstacles = (int) Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 3.0f);
         
         for (int i = 0; i <  activeObstacles; i++)
         {
