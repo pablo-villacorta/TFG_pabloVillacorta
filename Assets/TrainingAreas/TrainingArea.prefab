@@ -492,7 +492,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 19a47ca7e897a22489172042d8c97e9c, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 07c3fd1d66cb126418da0d5f971b7ae9, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: BasicAgent
@@ -533,7 +533,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DecisionPeriod: 10
+  DecisionPeriod: 3
   TakeActionsBetweenDecisions: 1
 --- !u!114 &6902776320027352433
 MonoBehaviour:
@@ -550,13 +550,13 @@ MonoBehaviour:
   m_SensorName: RayPerceptionSensorObstacles
   m_DetectableTags:
   - obstacle
-  m_RaysPerDirection: 6
-  m_MaxRayDegrees: 90
+  m_RaysPerDirection: 12
+  m_MaxRayDegrees: 180
   m_SphereCastRadius: 0.46
   m_RayLength: 5.5
   m_RayLayerMask:
     serializedVersion: 2
-    m_Bits: 4294967291
+    m_Bits: 51
   m_ObservationStacks: 1
   rayHitColor: {r: 1, g: 0, b: 0, a: 1}
   rayMissColor: {r: 1, g: 1, b: 1, a: 1}
@@ -577,7 +577,8 @@ MonoBehaviour:
   m_SensorName: RayPerceptionSensorTarget
   m_DetectableTags:
   - target
-  m_RaysPerDirection: 5
+  - wall
+  m_RaysPerDirection: 6
   m_MaxRayDegrees: 64.6
   m_SphereCastRadius: 0.46
   m_RayLength: 90
@@ -601,7 +602,7 @@ GameObject:
   - component: {fileID: 6902776320330054713}
   - component: {fileID: 6902776320330054712}
   - component: {fileID: 6902776320330054719}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: RightWall
   m_TagString: wall
   m_Icon: {fileID: 0}
@@ -696,7 +697,7 @@ GameObject:
   - component: {fileID: 6902776320331330290}
   - component: {fileID: 6902776320331330289}
   - component: {fileID: 6902776320331330288}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BackWall
   m_TagString: wall
   m_Icon: {fileID: 0}
@@ -791,7 +792,7 @@ GameObject:
   - component: {fileID: 6902776320403296830}
   - component: {fileID: 6902776320403296829}
   - component: {fileID: 6902776320403296828}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: LeftWall
   m_TagString: wall
   m_Icon: {fileID: 0}

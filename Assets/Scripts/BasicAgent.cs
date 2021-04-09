@@ -7,7 +7,8 @@ using Unity.MLAgents.Actuators;
 
 public class BasicAgent : Agent
 {
-
+    public static int finishedEpisodes = 0;
+    public static int targetsReached = 0;
     public Transform targetTransform;
 
     public List<GameObject> obstacles;
@@ -38,6 +39,14 @@ public class BasicAgent : Agent
         rBody.velocity = Vector3.zero;
         transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
         transform.localRotation = Quaternion.identity;
+        if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) == 0)
+        {
+            this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 10;
+        } else
+        {
+            this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 5; // 5 es el bueno para entrenar
+        }
+        finishedEpisodes++;
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -54,7 +63,7 @@ public class BasicAgent : Agent
     {
         MoveAgent(actionBuffers.DiscreteActions);
         float multiplier = 1f;
-        if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) > 0) multiplier = 10f;
+        if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) > 0) multiplier = 8f;
         AddReward(-0.01f * multiplier);
     }
 
@@ -110,6 +119,11 @@ public class BasicAgent : Agent
         if (other.CompareTag("target"))
         {
             SetReward(100f);
+            //targetsReached++;
+            //if (targetsReached % 100 == 0)
+            //{
+            //    Debug.Log("Success rate: " + (targetsReached * 1.0f / finishedEpisodes));
+            //}
             EndEpisode();
         }
         else if (other.CompareTag("wall"))
@@ -131,8 +145,6 @@ public class BasicAgent : Agent
         for (int i = 0; i <  activeObstacles; i++)
         {
             obstacles[i].GetComponent<MovingObstacle>().Spawn();
-            //var old = obstacles[i].transform.localPosition;
-            //obstacles[i].transform.localPosition = new Vector3(Random.Range(-7, 7), old.y, old.z);
         }
     }
 
