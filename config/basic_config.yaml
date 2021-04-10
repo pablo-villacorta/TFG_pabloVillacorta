@@ -13,10 +13,10 @@ behaviors:
     network_settings:
       normalize: false
       hidden_units: 128
-      num_layers: 3
+      num_layers: 2
       use_recurrent: true
-      sequence_length: 5
-      memory_size: 512
+      sequence_length: 4
+      memory_size: 128
     reward_signals:
       extrinsic:
         gamma: 0.99
@@ -63,15 +63,15 @@ environment_parameters:
           behavior: BasicAgent
           signal_smoothing: true
           min_lesson_length: 200
-          threshold: 0.075
-        value: 0.05
+          threshold: 0.05
+        value: 0.01
       - name: SlowMediumObstacles
         completion_criteria:
           measure: progress
           behavior: BasicAgent
           signal_smoothing: true
           min_lesson_length: 200
-          threshold: 0.2
-        value: 0.15
+          threshold: 0.1
+        value: 0.05
       - name: AllObstacles
-        value: 0.3
+        value: 0.1

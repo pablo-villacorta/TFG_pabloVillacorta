@@ -33,8 +33,8 @@ public class MovingObstacle : MonoBehaviour
 
     public void Spawn()
     {
-        float maxStep = Academy.Instance.EnvironmentParameters.GetWithDefault("max_obstacle_speed", 1.0f);
-        maxStep = 0.15f; // 0.15f es el bueno
+        float maxStep = Academy.Instance.EnvironmentParameters.GetWithDefault("max_obstacle_speed", 0.1f);
+        //maxStep = 0.15f; // 0.15f es el bueno
         xStep = Random.Range(-maxStep, maxStep);
         initialX = xStep > 0 ? minX : maxX;
         transform.localPosition = new Vector3(initialX, 1.5f, z);

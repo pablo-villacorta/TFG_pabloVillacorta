@@ -44,7 +44,7 @@ public class BasicAgent : Agent
             this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 10;
         } else
         {
-            this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 5; // 5 es el bueno para entrenar
+            this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 1; // 5 es el bueno para entrenar
         }
         finishedEpisodes++;
     }
@@ -119,11 +119,11 @@ public class BasicAgent : Agent
         if (other.CompareTag("target"))
         {
             SetReward(100f);
-            //targetsReached++;
-            //if (targetsReached % 100 == 0)
-            //{
-            //    Debug.Log("Success rate: " + (targetsReached * 1.0f / finishedEpisodes));
-            //}
+            targetsReached++;
+            if (targetsReached % 100 == 0)
+            {
+                Debug.Log("Success rate: " + (targetsReached * 1.0f / finishedEpisodes));
+            }
             EndEpisode();
         }
         else if (other.CompareTag("wall"))

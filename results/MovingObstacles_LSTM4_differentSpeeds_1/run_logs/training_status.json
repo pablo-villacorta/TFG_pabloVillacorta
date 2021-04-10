@@ -1,0 +1,53 @@
+{
+    "active_obstacles": {
+        "lesson_num": 3
+    },
+    "max_obstacle_speed": {
+        "lesson_num": 2
+    },
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 1499936,
+                "file_path": "results\\MovingObstacles_LSTM4_differentSpeeds_1\\BasicAgent\\BasicAgent-1499936.onnx",
+                "reward": 68.28571483067104,
+                "creation_time": 1618003125.5352378
+            },
+            {
+                "steps": 1999984,
+                "file_path": "results\\MovingObstacles_LSTM4_differentSpeeds_1\\BasicAgent\\BasicAgent-1999984.onnx",
+                "reward": 67.45263270327919,
+                "creation_time": 1618004720.588765
+            },
+            {
+                "steps": 2499990,
+                "file_path": "results\\MovingObstacles_LSTM4_differentSpeeds_1\\BasicAgent\\BasicAgent-2499990.onnx",
+                "reward": 86.34999990463257,
+                "creation_time": 1618006319.4143405
+            },
+            {
+                "steps": 2999981,
+                "file_path": "results\\MovingObstacles_LSTM4_differentSpeeds_1\\BasicAgent\\BasicAgent-2999981.onnx",
+                "reward": 70.32000096638997,
+                "creation_time": 1618007885.661838
+            },
+            {
+                "steps": 3007862,
+                "file_path": "results\\MovingObstacles_LSTM4_differentSpeeds_1\\BasicAgent\\BasicAgent-3007862.onnx",
+                "reward": null,
+                "creation_time": 1618007910.7408886
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 3007862,
+            "file_path": "results\\MovingObstacles_LSTM4_differentSpeeds_1\\BasicAgent.onnx",
+            "reward": null,
+            "creation_time": 1618007910.7408886
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}
