@@ -44,7 +44,7 @@ public class BasicAgent : Agent
             this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 10;
         } else
         {
-            this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 1; // 5 es el bueno para entrenar
+            this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 5; // 5 es el bueno para entrenar
         }
         finishedEpisodes++;
     }
@@ -129,11 +129,13 @@ public class BasicAgent : Agent
         else if (other.CompareTag("wall"))
         {
             SetReward(-30f);
+            Debug.Log("Wall crash");
             EndEpisode();
         }
         else if (other.CompareTag("obstacle"))
         {
             SetReward(-30f);
+            Debug.Log("Obstacle crash");
             EndEpisode();
         }
     }

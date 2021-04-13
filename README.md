@@ -1,127 +1,193 @@
-# Obstáculos móviles - LSTM - Hay que mejorar un poco más
+# Obstáculos móviles - LSTM + GAIL
 
-Voy a probar a reducir la complejidad de la NN. Voy a quitarle una capa interna (que tenga 2), a ver si mantiene los resultados y aprende más rápido.
+Se me ha ocurrido que antes de pasar a los entornos multi agente, podríamos probar una última cosa: que el agente trate de "clonar" el comportamiento del humano. Para ello, juego yo unos cuantos episodios (cuantos más mejor) que quedan grabados en un archivo ".demo", al que posteriormente puedo hacer referencia en el config.yaml para que el agente trate de replicar mi comportamiento. Esto se supone que debería acelerar considerablemente el aprendizaje.
 
-```yaml
-network_settings:
-      normalize: false
-      hidden_units: 128
-      num_layers: 2
-      use_recurrent: true
-      sequence_length: 5
-      memory_size: 512
-```
+Hay varias maneras de hacer que el agente aprenda del comportamiento del humano. La que utilizo es GAIL, que coge la idea de las GANs para detectar qué episodios (o pasos, no estoy seguro) son del humano y cuáles son de la máquina. La máquina tiene que intentar que la NN discriminadora se piense que es un humano el que está jugando.
 
-RUN-ID: MovingObstacles_LSTM_2layers_1
+## Prueba 1
 
-Tiene un rendimiento parecido a la versión MovingObstacles_LSTM8_DR5_fullCL_1, incluso va un poco adelantado. De momento parto de la premisa de que con 2 capas internas vale. Ahora voy a probar a poner la memoria de LSTM a 128 (actualmente es 512, lo que creo que es excesivo, y sequence_length a 4).
+Demo file: Demo2_1.demo (289 episodios completos, mean reward de 82,26)
+
+Settings:
 
 ```yaml
-network_settings:
-      normalize: false
-      hidden_units: 128
-      num_layers: 2
-      use_recurrent: true
-      sequence_length: 4
-      memory_size: 128
-```
-
-RUN-ID: MovingObstacles_LSTM_2layers_2
-
-Veremos si hay una mejora sustancial en el ritmo de aprendizaje. Result: no solo ha aprendido algo más rápido, si no que ha sobrepasado el rendimiento de las versiones anteriores. De cada 100 intentos, consigue llegar al otro lado un 85% de las veces. No está mal...
-
-### Prueba tonta: quitar LSTM (prueba de concepto)
-
-```yaml
-network_settings:
-      normalize: false
-      hidden_units: 128
-      num_layers: 2
-      use_recurrent: false
-      # sequence_length: 4
-      # memory_size: 128
-```
-
-RUN-ID: MovingObstacles_NoLSTM_1
-
-Pues vaya. Los resultados son prácticamente los mismos quel a versión MovingObstacles_LSTM_2layers_2. Parece que la memoria no ha aportado nada a MovingObstacles_LSTM_2layers_2. Me quedo bastante descolocado, aunque en el fondo me lo temía.
-
-### Otra prueba: ahora con 10 sequence_length
-
-```yaml
- network_settings:
-      normalize: false
-      hidden_units: 128
-      num_layers: 2
-      use_recurrent: true
-      sequence_length: 10
-      memory_size: 128
-```
-
-A ver qué pasa.
-
-RUN-ID: MovingObstacles_LSTM10_1
-
-Nada, muy parecido a las dos versiones anteriores. Parece que la memoria no supone valor añadido.
-
-## Incorporando diferentes velocidades máximas con CL
-
-```yaml
-max_obstacle_speed:
+reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+      gail: 
+        strength: 0.8
+        gamma: 0.99
+        demo_path: Assets/Demonstrations/Demo2_1.demo
+        use_actions: true
+        use_vail: false
+environment_parameters:
+  active_obstacles: 
     curriculum:
-      - name: OnlySlowObstacles
+      - name: NoObstacles
         completion_criteria:
-          measure: progress
+          measure: reward
           behavior: BasicAgent
           signal_smoothing: true
-          min_lesson_length: 200
-          threshold: 0.05
-        value: 0.01
-      - name: SlowMediumObstacles
-        completion_criteria:
-          measure: progress
-          behavior: BasicAgent
-          signal_smoothing: true
-          min_lesson_length: 200
-          threshold: 0.1
-        value: 0.05
-      - name: AllObstacles
-        value: 0.1
+          min_lesson_length: 100
+          threshold: 50.0
+        value: 0.0
+        - name: ThreeObstacles
+        value: 3.0
+  max_obstacle_speed: 0.1
 ```
 
-Los thresholds son 500k y 1M pasos.
+He modificado el CL para que pase directamente de 0 obstáculos a 3, ya que todas las demos se han hecho con 3 obstáculos.
 
-RUN-ID: MovingObstacles_LSTM4_differentSpeeds_1
+RUN-ID: MovingObstacles_GAIL_6
 
-Buenos resultados. Hay que tener en cuenta que tienen menor velocidad máxima que todas las versiones anteriores (0.1f vs 0.15f). De cada 100 intentos, llega al otro lado más de 90. Con esto podríamos contentarnos (rodea muy bien obstáculos lentos). Tengo mis dudas de que la memoria sea necesaria...
+Bastante esperanzador. Aunque la mean reward no es demasiado alta, si haces inferencia con el modelo generado tras 600k pasos, vemos cómo el agente tiene un comportamiento similar al mío (esquiva muy bien obstáculos lentos). Tiene un porcentaje de éxtio del 70%. Ahora toca probar a refinar los parámetros del GAIL, porque una strength de 0.8 es demasiado alta (le está dando prácticamente la misma importancia a los resultados de GAIL que a los de las recompensas extrínsecas, cuando debería ser menor - es posible que haga overfitting de las demostraciones y no esté llegando a generalizar bien, por eso hay que darle más importancia las recompensas extrínsecas, para que las demostraciones sean más una "guía" y no un manual).
 
-## Último intento: poner DecisionPeriod a 1, para que en todo paso se solicite una acción
+## Prueba 2
 
-He leído en un artículo de medium (https://towardsdatascience.com/cubetrack-deep-rl-for-active-tracking-with-unity-ml-agents-6b92d58acb5d), que un problema que tuvo la autora fue que tenía el DecisionPeriod a 10, y tenía seleccionada la opción "Take actions between decisions", de forma que realizaba la acción indicada por la brain durante 10 pasos seguidos. Siguiendo esta lógica, esto podría explicar por qué el modelo a veces se choca sin explicación aparente:
+Pruebo a reducir la strength del GAIL, ahora es 0.3.
 
-Mis mejores modelos han sido con periodos de decisión de 5, y con la opción de tomar acciones entre decisiones seleccionada. Quizás esto pueda explicar el por qué se choca el agente contra obstáculos que o van muy rápido o los tiene cerca...
+```yaml
+ reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+      gail: 
+        strength: 0.3
+        gamma: 0.99
+        demo_path: Assets/Demonstrations/Demo2_1.demo
+        use_actions: true
+        use_vail: false
+```
 
-Pruebo a poner el decision period a 1 (en el código), de forma que solicite una acción cada step. Veamos qué ocurre.
+RUN-ID: MovingObstacles_GAIL_7
 
-RUN-ID: MovingObstacles_LSTM_DR1_10
+## Prueba 7 (he hecho bastantes que no han sido documentadas entre medias)
 
-Buf. Tras 5M de pasos de entrenamiento, tenemos un agente muy inestable, con una media de 60 puntos con 3 obstáculos con 0.1f de velocidad máxima. Calculo que para llegar a los 65 de media se necesitarían unos 2.5M de pasos más (siguiendo la línea del gráfico).
+```yaml
+gail:
+        gamma: 0.99
+        strength: 0.3
+        encoding_size: 64
+        learning_rate: 0.0003
+        use_actions: true
+        use_vail: false
+        demo_path: Assets/Demonstrations/Demo3_0.demo
+```
 
-Mi mejor baza es esta: MovingObstacles_LSTM4_differentSpeeds_1, con velocidades máximas de 0.1f.
+```yaml
+curriculum:
+    - value:
+        sampler_type: constant
+        sampler_parameters:
+          seed: 612
+          value: 0.0
+      name: NoObstacles
+      completion_criteria:
+        behavior: BasicAgent
+        measure: reward
+        min_lesson_length: 100
+        signal_smoothing: true
+        threshold: 50.0
+        require_reset: false
+    - value:
+        sampler_type: constant
+        sampler_parameters:
+          seed: 613
+          value: 3.0
+      name: ThreeObstacles
+      completion_criteria: null
+  max_obstacle_speed:
+    curriculum:
+    - value:
+        sampler_type: constant
+        sampler_parameters:
+          seed: 614
+          value: 0.1
+      name: max_obstacle_speed
+      completion_criteria: null
+```
 
-## TO-DO
+RUN-ID: MovingObstacles_GAIL_13 (Demo3_0.demo)
 
-- Seguir entrenando MovingObstacles_LSTM_2layers_2, es la mejor que tenemos de momento
-- Hacer CL de verdad con la velocidad de los obstáculos. Empezar **muy lento**, y que empiece a acelerar una vez haya llegado a los 3 obstáculos (que entrene con 3 obstáculos muy lentos durante un rato, luego ya metemos velocidad).
-- Probar a hacer los rayos que detectan los obstáculos más largos.
-- Probar a dejar mucho rato con un periodo de decisión bajo (e.g. 2). Al hacer esto, duplicar la memoria (a ver qué pasa)
+Me he dado cuenta de que la demo que tenía (Demo2_1.demo) había sido grabada con un decision period (en el código especificado) de 1, por lo que el agente aprendía peor (o muchísimo más despacio, como ya hemos podido comprobar en versiones anteriores). He re-grabado unos 300 episodios con el periodo de decision a 5 (que es el número que mejores resultados me ha dado hasta el momento), y estoy probando a entrenar el agente con esto, para que coincidan el DR de las demos y el del agente real. En este caso, lo he entrenando con la configuración de arriba (strengh=0.3, CL que pasa de 0 a 3 obstáculos).
 
-Luego voy a probar a cambiar:
+Una cosa a tener en cuenta es que el tiempo de entrenamiento por step es bastante mayor con GAIL (unos 50-60 segundos de media por cada 5k pasos, en comparación con los 25-30 que había antes). Pero los resultados no son malos. Con este modelo, tras unos 600k pasos de entrenamiento, aunque tan solo obtenemos unos 60 de mean reward, obtenemos un porcentaje de exito de 81%, que no está mal teniendo en cuenta que el record absoluto es de 90%.
 
-- El número de agentes que entrenan a la vez (acutalmente es 36, me parece demasiado, igual lo reduzco a la mitad)
-- El sequence_length del LSTM. Probar con más o con menos...
+Tener en cuenta que el mean reward de la nueva demo (Demo3_0.demo) ronda los 78 puntos, por lo que no esperemos que el agente tenga una puntuación mucho mayor que eso (de mean reward digo, no de % de exito).
 
+Creo que en esta versión el strength del GAIL ha sido demasiado alto, ya que al evaluar el comportamiento del modelo ya entrenado en frío, me parece que hace muchas cosas "estúpidas", creo que está haciendo overfitting de los episodios que hay en las demos. Por eso, ahora voy a probar a reducir la strengh a 0.095, para ver si conseguimos que el agente aprenda por su cuenta, y no únicamente "recuerde" lo que ha visto en las demos (que en realidad no lo ha visto él si no la otra NN discriminadora, pero bueno ya me entiendo).
 
+## Prueba 8
 
+RUN-ID: MovingObstacles_GAIL_14 (Demo3_0.demo)
 
+Cambios con respecto a la versión anterior:
 
+```yaml
+gail: 
+        strength: 0.095
+        gamma: 0.99
+        demo_path: Assets/Demonstrations/Demo3_0.demo
+        use_actions: true
+        use_vail: false
+```
+
+Muy bien, tras 1.2M de steps de entrenamiento llegamos a un mean reward de 70 ptos (parece que converge ya y no avanza).
+
+## Prueba 9
+
+Probamos ahora con GAIL strength=0.05
+
+```yaml
+ gail: 
+        strength: 0.05
+        gamma: 0.99
+        demo_path: Assets/Demonstrations/Demo3_0.demo
+        use_actions: true
+        use_vail: false
+```
+
+RUN-ID: MovingObstacles_GAIL_15 (Demo3_0.demo)
+
+Muy parecido a la versión anterior (al menos durante los primeros 450k steps)
+
+## Prueba 10
+
+Ahora prueba con GAIL use_actions = false
+
+```yaml
+gail: 
+        strength: 0.05
+        gamma: 0.99
+        demo_path: Assets/Demonstrations/Demo3_0.demo
+        use_actions: false
+        use_vail: false
+```
+
+RUN-ID: MovingObstacles_GAIL_16 (Demo3_0.demo)
+
+Sin más. Parecido a los dos anteriores (~60pts tras 350k steps).
+
+Tras analizar la inferencia del modelo en frío, veo que 2/3 de las colisiones son con obstáculos, y el resto con paredes. El modelo llega al otro lado ~82.5% de las veces.
+
+## Prueba 11: más memoria?
+
+```yaml
+network_settings:
+      normalize: false
+      hidden_units: 128
+      num_layers: 2
+      use_recurrent: true
+      sequence_length: 16
+      memory_size: 256
+```
+
+Todo lo demás es igual que la versión anterior (solamente hemos cuadruplicado sequence_length y dulpicado memory_size). Quiero probar si, ahora que el agente tiene más claro que hacer gracias al GAIL, puede llegar a saber usar mejor la memoria (y así detectar mejor cuándo un obstáculo es demasiado lento como para esperar a que se mueva, que es algo que todavía no hemos conseguido del todo).
+
+RUN-ID: MovingObstacles_GAIL_17 (Demo3_0.demo)
+
+# TO-DO
+
+- Probar con curiosity
+- Probar con más memoria (sequence_length)

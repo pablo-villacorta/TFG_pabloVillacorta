@@ -15,18 +15,24 @@ behaviors:
       hidden_units: 128
       num_layers: 2
       use_recurrent: true
-      sequence_length: 4
-      memory_size: 128
+      sequence_length: 16
+      memory_size: 256
     reward_signals:
       extrinsic:
         gamma: 0.99
         strength: 1.0
+      gail: 
+        strength: 0.05
+        gamma: 0.99
+        demo_path: Assets/Demonstrations/Demo3_0.demo
+        use_actions: false
+        use_vail: false
     max_steps: 10000000
     time_horizon: 64
     summary_freq: 5000
 
 environment_parameters:
-  active_obstacles:
+  active_obstacles: 
     curriculum:
       - name: NoObstacles # The '-' is important as this is a list
         completion_criteria:
@@ -36,42 +42,42 @@ environment_parameters:
           min_lesson_length: 100
           threshold: 50.0
         value: 0.0
-      - name: OneObstacle # The '-' is important as this is a list
-        completion_criteria:
-          measure: reward
-          behavior: BasicAgent
-          signal_smoothing: true
-          min_lesson_length: 450
-          threshold: 70.0
-        value: 1.0
-      - name: TwoObstacles # This is the start of the second lesson
-        completion_criteria:
-          measure: reward
-          behavior: BasicAgent
-          signal_smoothing: true
-          min_lesson_length: 450
-          threshold: 67.0
-          require_reset: true
-        value: 2.0
+      # - name: OneObstacle # The '-' is important as this is a list
+      #   completion_criteria:
+      #     measure: reward
+      #     behavior: BasicAgent
+      #     signal_smoothing: true
+      #     min_lesson_length: 100
+      #     threshold: 65.0
+      #   value: 1.0
+      # - name: TwoObstacles # This is the start of the second lesson
+      #   completion_criteria:
+      #     measure: reward
+      #     behavior: BasicAgent
+      #     signal_smoothing: true
+      #     min_lesson_length: 100
+      #     threshold: 65.0
+      #     require_reset: true
+      #   value: 2.0
       - name: ThreeObstacles
         value: 3.0
-  max_obstacle_speed:
-    curriculum:
-      - name: OnlySlowObstacles
-        completion_criteria:
-          measure: progress
-          behavior: BasicAgent
-          signal_smoothing: true
-          min_lesson_length: 200
-          threshold: 0.05
-        value: 0.01
-      - name: SlowMediumObstacles
-        completion_criteria:
-          measure: progress
-          behavior: BasicAgent
-          signal_smoothing: true
-          min_lesson_length: 200
-          threshold: 0.1
-        value: 0.05
-      - name: AllObstacles
-        value: 0.1
+  max_obstacle_speed: 0.1
+    # curriculum:
+    #   - name: OnlySlowObstacles
+    #     completion_criteria:
+    #       measure: progress
+    #       behavior: BasicAgent
+    #       signal_smoothing: true
+    #       min_lesson_length: 200
+    #       threshold: 0.05
+    #     value: 0.01
+    #   - name: SlowMediumObstacles
+    #     completion_criteria:
+    #       measure: progress
+    #       behavior: BasicAgent
+    #       signal_smoothing: true
+    #       min_lesson_length: 200
+    #       threshold: 0.1
+    #     value: 0.05
+    #   - name: AllObstacles
+    #     value: 0.1
