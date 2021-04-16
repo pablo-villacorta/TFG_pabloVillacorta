@@ -1,0 +1,47 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1618477106",
+        "python_version": "3.7.9 (tags/v3.7.9:13c94747c7, Aug 17 2020, 18:58:18) [MSC v.1900 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\pablo\\Documents\\Universidad\\TFG\\venv_tfg\\Scripts\\mlagents-learn config/basic_config.yaml --run-id=MovingObstacles_GAIL_19",
+        "mlagents_version": "0.24.0",
+        "mlagents_envs_version": "0.24.0",
+        "communication_protocol_version": "1.4.0",
+        "pytorch_version": "1.7.1+cu110",
+        "numpy_version": "1.20.1",
+        "end_time_seconds": "1618477114"
+    },
+    "total": 7.588640300000001,
+    "count": 1,
+    "self": 0.016110300000000244,
+    "children": {
+        "run_training.setup": {
+            "total": 0.1700271,
+            "count": 1,
+            "self": 0.1700271
+        },
+        "TrainerController.start_learning": {
+            "total": 7.402502900000001,
+            "count": 1,
+            "self": 0.0006805999999999202,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 7.4013454,
+                    "count": 1,
+                    "self": 7.4013454
+                },
+                "trainer_threads": {
+                    "total": 1.5000000015419346e-06,
+                    "count": 1,
+                    "self": 1.5000000015419346e-06
+                },
+                "TrainerController._save_models": {
+                    "total": 0.0004753999999991265,
+                    "count": 1,
+                    "self": 0.0004753999999991265
+                }
+            }
+        }
+    }
+}

@@ -22,9 +22,9 @@ behaviors:
         gamma: 0.99
         strength: 1.0
       gail: 
-        strength: 0.05
+        strength: 0.01
         gamma: 0.99
-        demo_path: Assets/Demonstrations/Demo3_0.demo
+        demo_path: Assets/Demonstrations/Demo5.demo
         use_actions: false
         use_vail: false
     max_steps: 10000000

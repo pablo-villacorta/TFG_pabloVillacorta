@@ -371,6 +371,7 @@ GameObject:
   - component: {fileID: 6902776320027352432}
   - component: {fileID: 6902776320027352433}
   - component: {fileID: 4231153952594228872}
+  - component: {fileID: 5125299540320845806}
   m_Layer: 9
   m_Name: Agent
   m_TagString: Untagged
@@ -492,7 +493,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 9bdb4198fa704fb49a318897e933d8a0, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: a131c264bf8c9c14cbff4333246be716, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: BasicAgent
@@ -577,9 +578,8 @@ MonoBehaviour:
   m_SensorName: RayPerceptionSensorTarget
   m_DetectableTags:
   - target
-  - wall
   m_RaysPerDirection: 6
-  m_MaxRayDegrees: 64.6
+  m_MaxRayDegrees: 110
   m_SphereCastRadius: 0.46
   m_RayLength: 90
   m_RayLayerMask:
@@ -587,6 +587,33 @@ MonoBehaviour:
     m_Bits: 4294967291
   m_ObservationStacks: 1
   rayHitColor: {r: 0.03702387, g: 0.6037736, b: 0.07676157, a: 1}
+  rayMissColor: {r: 1, g: 1, b: 1, a: 1}
+  m_StartVerticalOffset: 0
+  m_EndVerticalOffset: 0
+--- !u!114 &5125299540320845806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6902776320027352328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bb6b867a41448888c1cd4f99643ad71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: RayPerceptionSensorWalls
+  m_DetectableTags:
+  - wall
+  m_RaysPerDirection: 6
+  m_MaxRayDegrees: 64.6
+  m_SphereCastRadius: 0.1
+  m_RayLength: 1
+  m_RayLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967291
+  m_ObservationStacks: 1
+  rayHitColor: {r: 0.9716981, g: 0.9230296, b: 0.16042183, a: 1}
   rayMissColor: {r: 1, g: 1, b: 1, a: 1}
   m_StartVerticalOffset: 0
   m_EndVerticalOffset: 0

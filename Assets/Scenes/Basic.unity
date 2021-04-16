@@ -1183,14 +1183,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 867575808}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Record: 1
   NumStepsToRecord: 0
-  DemonstrationName: PruebaGAIL14
+  DemonstrationName: Prueba_GAIL20_6M
   DemonstrationDirectory: Assets/Demonstrations
 --- !u!1001 &1016050203
 PrefabInstance:
@@ -3311,7 +3311,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Model
       value: 
-      objectReference: {fileID: 5022602860645237092, guid: 7dc4b0a8d37d64e4b8c38020bce3b473,
+      objectReference: {fileID: 5022602860645237092, guid: a131c264bf8c9c14cbff4333246be716,
         type: 3}
     - target: {fileID: 6902776320027352439, guid: a8bdc4b315abc6645a29dd182e0556c8,
         type: 3}
