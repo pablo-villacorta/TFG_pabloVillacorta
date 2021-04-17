@@ -11,7 +11,8 @@ public class BasicAgent : Agent
     public static int targetsReached = 0;
     public Transform targetTransform;
 
-    public List<GameObject> obstacles;
+    public AgentManager AgentManager;
+    public Agent OtherAgent;
 
     private Rigidbody rBody;
     private float agentRunSpeed = 5f;
@@ -24,18 +25,10 @@ public class BasicAgent : Agent
     public override void Initialize()
     {
         this.MaxStep = 5000;
-
-        // apartar todos los obstaculos salvo el primero
-        for (int i = 0; i < obstacles.Count; i++)
-        {
-            var old = obstacles[i].transform.position;
-            obstacles[i].transform.position = new Vector3(100000, old.y, old.z);
-        }
     }
 
     public override void OnEpisodeBegin()
     {
-        SpawnObstacles();
         rBody.velocity = Vector3.zero;
         transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
         transform.localRotation = Quaternion.identity;
@@ -63,7 +56,7 @@ public class BasicAgent : Agent
     {
         MoveAgent(actionBuffers.DiscreteActions);
         float multiplier = 1f;
-        if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) > 0) multiplier = 8f;
+        //if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) > 0) multiplier = 1f;
         AddReward(-0.01f * multiplier);
     }
 
@@ -119,35 +112,33 @@ public class BasicAgent : Agent
         if (other.CompareTag("target"))
         {
             SetReward(100f);
-            targetsReached++;
-            if (targetsReached % 100 == 0)
-            {
-                Debug.Log("Success rate: " + (targetsReached * 1.0f / finishedEpisodes));
-            }
-            EndEpisode();
+            OtherAgent.SetReward(-50f);
+            //targetsReached++;
+            //if (targetsReached % 100 == 0)
+            //{
+            //    Debug.Log("Success rate: " + (targetsReached * 1.0f / finishedEpisodes));
+            //}
+            AgentManager.EndEpisodes();
         }
         else if (other.CompareTag("wall"))
         {
             SetReward(-30f);
+            OtherAgent.AddReward(5f);
             //Debug.Log("Wall crash");
-            EndEpisode();
+            ResetPosition();
         }
         else if (other.CompareTag("obstacle"))
         {
             SetReward(-30f);
+            OtherAgent.AddReward(5f);
             //Debug.Log("Obstacle crash");
-            EndEpisode();
+            ResetPosition();
         }
     }
 
-    private void SpawnObstacles()
+    private void ResetPosition()
     {
-        int activeObstacles = (int) Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 3.0f);
-        
-        for (int i = 0; i <  activeObstacles; i++)
-        {
-            obstacles[i].GetComponent<MovingObstacle>().Spawn();
-        }
+        transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
+        transform.localRotation = Quaternion.identity;
     }
-
 }

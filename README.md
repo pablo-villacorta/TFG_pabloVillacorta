@@ -1,120 +1,51 @@
-# Obstáculos móviles - LSTM + GAIL
+# Self Play - Probando
 
-Vale, he probado a cambiar la configuración de los rayos del agente. He separado los rayos que detectaban target y walls, ahora son dos componentes separados. Lo he hecho para que la longitud de los rayos que detectan walls sea mucho menor (casi del tamaño del agente), de forma que el agente sea capaz de deducir si está cerca o no de una pared (esto puede ser útil para evitar colisiones con la pared). También he aumentado el ángulo de los rayos que detectan el target, ahora es 110, de forma que el agente, incluso cuando está mirando a los lados, sea capaz de encontrar vías libres hacia el target.
+Vale, he hecho unos cuantos cambios en el proyecto. Tomando la última versión (commiteada), los cambios más significativos son los siguientes:
 
-Problema: al cambiar las observaciones, todo cambia. Para empezar, ninguno de los modelos entrenados previamente nos vale. Encima, voy a tener que re-grabar todas las demostraciones, ya que las observaciones son diferentes. Pero confío en que este cambio nos permita llegar a valores más interesantes.
+- En cada training Area hay 2 agentes (he modificado el prefab para eso), cada uno con sus BehaviorParameters pero con distinto Team ID
 
-Por cierto, la prueba anterior con memoria adicional no ha sacado resultados concluyentes. Ha empezado aprendiendo más rapido y a mejor ritmo, pero al final ha empezado a converger y se ha estancado en un punto similar a sus versiones anteriores con LSTM más reducido. Encima, no ha conseguido solucionar el problema que teníamos en el que el agente se quedaba esperando a que el obstáculo se "despegara" de la pared, incluso cuando el obstáculo era muy lento. 
+- La clase AgentManager que sirve para coordinar ambos agentes en cada training area (por ejemplo, para terminar los episodios de los dos agentes a la vez)
+
+- La clase agent tiene una referencia al AgentManager de su training area, y otra referencia al otro agente para poder restarle puntos al ganarle
+
+- Se ha añadido un nuevo componente raycast sensor, para poder detectar al otro agente
+
+- Se ha modificado el fichero de config.yaml para incluir el self play ( y he quitado GAIL):
+
+  - ```yaml
+    network_settings:
+          normalize: false
+          hidden_units: 128
+          num_layers: 2
+          use_recurrent: false
+          # sequence_length: 16
+          # memory_size: 256
+    self_play:
+          window: 10
+          play_against_latest_model_ratio: 0.5
+          save_steps: 5000
+          swap_steps: 2000
+          team_change: 10000
+    ```
+
+Bien, y con estos cambios ya me he puesto a probar. Tras unas cuantas rondas fallidas (por fallos tontos que no merece la pena mencionar), el primer entrenamiento relativamente satisfactorio con self play ha sido SelfPlay_NoTools_6 (he empezado manteniendo las acciones de los agentes, en breve añadiré alguna herramienta especial para poner el asunto más interesante). De momento el objetivo de cada agente es llegar al otro lado antes que su rival. Destacar que durante este entrenamiento las colisiones entre agentes se han desactivado, de forma que los agentes podían "atravesar" a sus rivales como si nada (aunque sí que los podían ver).
+
+Esquema de recompensas:
+
+- +100 por llegar al otro lado -> -50 al rival por perder
+- -30 por chocarse con un obstáculo o pared (en vez de perder directamente, hago que vuelva a una posición de salida inicial - random)
+- -0.01f de existential penalty (me he cargado el multiplicador que había en versiones anteriores)
+- El decision period lo he dejado como estaba, a 10 cuando no hay obstáculos, a 5 cuando sí que los hay.
+
+Ahora voy a probar a activar las colisiones entre los agentes, para ver si, dejándolos entrenar un rato, desarrollan algún comportamiento interesante (activando la casilla correspondiente en la matriz de colisiones del proyecto).
+
+RUN-ID: SelfPlay_NoTools_7
+
+Vale, tras 140k pasos de entrenamiento, vemos cómo los agentes no han desarrollado ninguna habilidad increíble (que involucre el uso de las colisiones entre agentes para "empujarse"). Voy a probar a dar recompensa al rival cuando un agente se choque con un obstáculo o una pared (a ver si acaba deduciendo que le puede beneficiar eso).
+
+RUN-ID: SelfPlay_NoTools_8
+
+Vale, he hecho que, cuando un agente colisione con un obstáculo o una pared, éste tenga una penalización de -30, y su rival tenga una recompensa de +5. No conseguimos nada espectacular parece. Por el momento voy a dejar esta recompensa adicional, por si más adelante acaba siendo interesante.
 
 
 
-Vale, he re-grabado las demostraciones. Fichero: Demo5.demo
-
-
-
-Hemos entrenado 3 versiones diferentes:
-
-## MovingObstacles_GAIL_18
-
-GAIL strength: 0.05
-
-## MovingObstacles_GAIL_19
-
-GAIL strength: 0.1
-
-## MovingObstacles_GAIL_20
-
-GAIL strength. 0.01
-
-Esta última versión (20) ha sido la que mejores resultados me ha dado. Tras 6M de steps de entrenamiento (con 36 agentes entrenando en paralelo), obtenemos un mean reward de 78 (casi igual de bueno que yo mismo, un humano). Tiene un porcentaje de acierto que ronda el 93%, es muy alto. Se ha entrenado con LSTM 16 sequence_length.
-
-```yaml
-network_settings:
-      normalize: false
-      hidden_units: 128
-      num_layers: 2
-      use_recurrent: true
-      sequence_length: 16
-      memory_size: 256
-```
-
-Es la mejor versión que tenemos hasta la fecha con obstáculos móviles. La velocidad máxima, como ya sabemos, es de 0.1 (la de los obstáculos). Tener en cuenta que se ha entrenado con el siguiente CL:
-
-```yaml
-environment_parameters:
-  active_obstacles: 
-    curriculum:
-      - name: NoObstacles # The '-' is important as this is a list
-        completion_criteria:
-          measure: reward
-          behavior: BasicAgent
-          signal_smoothing: true
-          min_lesson_length: 100
-          threshold: 50.0
-        value: 0.0
-      # - name: OneObstacle # The '-' is important as this is a list
-      #   completion_criteria:
-      #     measure: reward
-      #     behavior: BasicAgent
-      #     signal_smoothing: true
-      #     min_lesson_length: 100
-      #     threshold: 65.0
-      #   value: 1.0
-      # - name: TwoObstacles # This is the start of the second lesson
-      #   completion_criteria:
-      #     measure: reward
-      #     behavior: BasicAgent
-      #     signal_smoothing: true
-      #     min_lesson_length: 100
-      #     threshold: 65.0
-      #     require_reset: true
-      #   value: 2.0
-      - name: ThreeObstacles
-        value: 3.0
-  max_obstacle_speed: 0.1
-    # curriculum:
-    #   - name: OnlySlowObstacles
-    #     completion_criteria:
-    #       measure: progress
-    #       behavior: BasicAgent
-    #       signal_smoothing: true
-    #       min_lesson_length: 200
-    #       threshold: 0.05
-    #     value: 0.01
-    #   - name: SlowMediumObstacles
-    #     completion_criteria:
-    #       measure: progress
-    #       behavior: BasicAgent
-    #       signal_smoothing: true
-    #       min_lesson_length: 200
-    #       threshold: 0.1
-    #     value: 0.05
-    #   - name: AllObstacles
-    #     value: 0.1
-```
-
-Y estos hiperparámetros
-
-```yaml
-network_settings:
-      normalize: false
-      hidden_units: 128
-      num_layers: 2
-      use_recurrent: true
-      sequence_length: 16
-      memory_size: 256
-    reward_signals:
-      extrinsic:
-        gamma: 0.99
-        strength: 1.0
-      gail: 
-        strength: 0.01
-        gamma: 0.99
-        demo_path: Assets/Demonstrations/Demo5.demo
-        use_actions: false
-        use_vail: false
-```
-
-Creo que me voy a quedar con esto. Un porcentaje de acierto del 93.5% me parece lo suficientemente bueno. Viendo al agente en frío (fuera del entrenamiento), tras los 6M steps, parece que tiene un criterio medianamente decente para saber cuándo pararse a esperar a un obstáculo y cuándo rodearlo. Además, se nota que se ha entrenado con GAIL, porque hay veces en las que se gira 90º y "adelanta" al obstáculo (tal y como hacía yo a veces). Tener en cuenta que no es perfecto, las demostraciones grabadas por mi tampoco lo eran (aunque esto último no debería suponer un gran problema, porque el GAIL strength es 0.01, bastante bajo, para que mis demos sean más una "guía" que un manual de instrucciones para el agente; solo quiero darle pautas generales). De todas formas, podemos estar orgullosos. Una cosa más: probablemente existe una combinación de hiperparametros que nos de un rendimiento aún mejor, pero no me renta dedicarle más tiempo a este tipo de entorno (movingObstacles), ya que este es un proyecto más de experimentación que otra cosa. si necesitáramos un modelo altamente preciso, usaríamos máquinas más potentes, haríamos entrenamientos más largos y realizaríamos un estudio mucho más exhausto de lo que el modelo necesita para ser más preciso. Estamos experimentando: RL, CL, GAIL, etc. Y hemos sacado un modelo medianamente decente, así que ni tan mal.
-
-Nota: el modelo GAIL 20 a veces comete algún que otro fallo tonto, si te preguntan por ello responder que muy seguramente estos fallos desaparecerían si dejáramos entrenar aún más tiempo al modelo, de forma que pueda "pulir" estos fallos.
