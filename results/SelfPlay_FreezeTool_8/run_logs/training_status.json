@@ -1,0 +1,41 @@
+{
+    "active_obstacles": {
+        "lesson_num": 2
+    },
+    "max_obstacle_speed": {
+        "lesson_num": 0
+    },
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 48148,
+                "file_path": "results\\SelfPlay_FreezeTool_8\\BasicAgent\\BasicAgent-48148.onnx",
+                "reward": null,
+                "creation_time": 1618679855.9628534
+            },
+            {
+                "steps": 54405,
+                "file_path": "results\\SelfPlay_FreezeTool_8\\BasicAgent\\BasicAgent-54405.onnx",
+                "reward": null,
+                "creation_time": 1618679901.1005778
+            },
+            {
+                "steps": 94144,
+                "file_path": "results\\SelfPlay_FreezeTool_8\\BasicAgent\\BasicAgent-94144.onnx",
+                "reward": null,
+                "creation_time": 1618680186.1985104
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 94144,
+            "file_path": "results\\SelfPlay_FreezeTool_8\\BasicAgent.onnx",
+            "reward": null,
+            "creation_time": 1618680186.1985104
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}

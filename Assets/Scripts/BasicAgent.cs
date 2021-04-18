@@ -11,11 +11,24 @@ public class BasicAgent : Agent
     public static int targetsReached = 0;
     public Transform targetTransform;
 
+    private static int maximumToolStamina = 200;
+    private static int recoverySteps = 100; // steps needed to unfreeze after being frozen
+    private static float normalAgentRunSpeed = 5f;
+    private static float frozenAgentRunSpeed = 2f;
+
     public AgentManager AgentManager;
-    public Agent OtherAgent;
+    public BasicAgent OtherAgent;
 
     private Rigidbody rBody;
     private float agentRunSpeed = 5f;
+
+    private int currentToolStamina = 0;
+    private int recoveryStatus;
+
+    private bool isFrozen;
+
+    public Material normalMaterial;
+    public Material frozenMaterial;
 
     void Start()
     {
@@ -29,6 +42,10 @@ public class BasicAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        agentRunSpeed = normalAgentRunSpeed;
+        currentToolStamina = maximumToolStamina;
+        recoveryStatus = recoverySteps;
+        Unfreeze();
         rBody.velocity = Vector3.zero;
         transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
         transform.localRotation = Quaternion.identity;
@@ -50,6 +67,9 @@ public class BasicAgent : Agent
 
         // Agent rotation
         sensor.AddObservation(transform.localRotation.y);
+
+        // Tool stamina (normalizado)
+        sensor.AddObservation(currentToolStamina / maximumToolStamina);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -62,6 +82,23 @@ public class BasicAgent : Agent
 
     public void MoveAgent(ActionSegment<int> act)
     {
+        if (currentToolStamina < maximumToolStamina) currentToolStamina++;
+        if (recoveryStatus < recoverySteps) recoveryStatus++;
+        if (recoveryStatus >= recoverySteps && isFrozen)
+        {
+            Unfreeze();
+        }
+
+        if (isFrozen) return;
+
+        if (currentToolStamina < maximumToolStamina)
+        {
+            agentRunSpeed = frozenAgentRunSpeed;
+        } else
+        {
+            agentRunSpeed = normalAgentRunSpeed;
+        }
+
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
 
@@ -79,6 +116,14 @@ public class BasicAgent : Agent
                 break;
             case 4:
                 rotateDir = transform.up * -1f;
+                break;
+            case 5:
+                if (currentToolStamina >= maximumToolStamina && !isFrozen)
+                {
+                    // usar herramienta
+                    currentToolStamina = 0;
+                    UseTool();
+                }
                 break;
         }
         transform.Rotate(rotateDir, Time.deltaTime * 150f);
@@ -104,6 +149,9 @@ public class BasicAgent : Agent
         else if (Input.GetKey(KeyCode.S))
         {
             discreteActionsOut[0] = 2;
+        } else if (Input.GetKey(KeyCode.Space))
+        {
+            discreteActionsOut[0] = 5;
         }
     }
 
@@ -136,9 +184,33 @@ public class BasicAgent : Agent
         }
     }
 
+    private void UseTool()
+    {
+        OtherAgent.Freeze();
+    }
+
     private void ResetPosition()
     {
         transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
         transform.localRotation = Quaternion.identity;
+    }
+
+    public void Freeze()
+    {
+        if (this.isFrozen) return;
+        if (recoveryStatus < recoverySteps) return;
+        
+        recoveryStatus = 0;
+        this.isFrozen = true;
+        this.GetComponent<MeshRenderer>().material = frozenMaterial;
+    }
+
+    public void Unfreeze()
+    {
+        if (!this.isFrozen) return;
+
+        recoveryStatus = recoverySteps;
+        this.isFrozen = false;
+        this.GetComponent<MeshRenderer>().material = normalMaterial;
     }
 }

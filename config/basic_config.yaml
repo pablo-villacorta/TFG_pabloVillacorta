@@ -46,7 +46,7 @@ environment_parameters:
           behavior: BasicAgent
           signal_smoothing: true
           min_lesson_length: 100
-          threshold: 50.0
+          threshold: 80.0
         value: 0.0
       - name: OneObstacle # The '-' is important as this is a list
         completion_criteria:
@@ -54,7 +54,7 @@ environment_parameters:
           behavior: BasicAgent
           signal_smoothing: true
           min_lesson_length: 100
-          threshold: 65.0
+          threshold: 80.0
         value: 1.0
       - name: TwoObstacles # This is the start of the second lesson
         completion_criteria:
@@ -62,7 +62,7 @@ environment_parameters:
           behavior: BasicAgent
           signal_smoothing: true
           min_lesson_length: 100
-          threshold: 65.0
+          threshold: 80.0
           require_reset: true
         value: 2.0
       - name: ThreeObstacles

@@ -1,51 +1,240 @@
-# Self Play - Probando
+# Self Play - Probando con herramientas
 
-Vale, he hecho unos cuantos cambios en el proyecto. Tomando la última versión (commiteada), los cambios más significativos son los siguientes:
+## Herramienta: congelar al enemigo
 
-- En cada training Area hay 2 agentes (he modificado el prefab para eso), cada uno con sus BehaviorParameters pero con distinto Team ID
+Idea: que el agente, en cualquier momento, pueda congelar a su enemigo durante x tiempo. La herramienta tardará un tiempo en reponerse (tendrá un contador), y al usar la herramienta, el agente verá su velocidad reducida durante un tiempo también (recupera estamina perdida al utilizar la herramienta).
 
-- La clase AgentManager que sirve para coordinar ambos agentes en cada training area (por ejemplo, para terminar los episodios de los dos agentes a la vez)
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Unity.MLAgents;
+using Unity.MLAgents.Sensors;
+using Unity.MLAgents.Actuators;
 
-- La clase agent tiene una referencia al AgentManager de su training area, y otra referencia al otro agente para poder restarle puntos al ganarle
+public class BasicAgent : Agent
+{
+    public static int finishedEpisodes = 0;
+    public static int targetsReached = 0;
+    public Transform targetTransform;
 
-- Se ha añadido un nuevo componente raycast sensor, para poder detectar al otro agente
+    private static int maximumToolStamina = 200;
+    private static int recoverySteps = 100; // steps needed to unfreeze after being frozen
+    private static float normalAgentRunSpeed = 5f;
+    private static float frozenAgentRunSpeed = 2f;
 
-- Se ha modificado el fichero de config.yaml para incluir el self play ( y he quitado GAIL):
+    public AgentManager AgentManager;
+    public BasicAgent OtherAgent;
 
-  - ```yaml
-    network_settings:
-          normalize: false
-          hidden_units: 128
-          num_layers: 2
-          use_recurrent: false
-          # sequence_length: 16
-          # memory_size: 256
-    self_play:
-          window: 10
-          play_against_latest_model_ratio: 0.5
-          save_steps: 5000
-          swap_steps: 2000
-          team_change: 10000
-    ```
+    private Rigidbody rBody;
+    private float agentRunSpeed = 5f;
 
-Bien, y con estos cambios ya me he puesto a probar. Tras unas cuantas rondas fallidas (por fallos tontos que no merece la pena mencionar), el primer entrenamiento relativamente satisfactorio con self play ha sido SelfPlay_NoTools_6 (he empezado manteniendo las acciones de los agentes, en breve añadiré alguna herramienta especial para poner el asunto más interesante). De momento el objetivo de cada agente es llegar al otro lado antes que su rival. Destacar que durante este entrenamiento las colisiones entre agentes se han desactivado, de forma que los agentes podían "atravesar" a sus rivales como si nada (aunque sí que los podían ver).
+    private int currentToolStamina = 0;
+    private int recoveryStatus;
 
-Esquema de recompensas:
+    private bool isFrozen;
 
-- +100 por llegar al otro lado -> -50 al rival por perder
-- -30 por chocarse con un obstáculo o pared (en vez de perder directamente, hago que vuelva a una posición de salida inicial - random)
-- -0.01f de existential penalty (me he cargado el multiplicador que había en versiones anteriores)
-- El decision period lo he dejado como estaba, a 10 cuando no hay obstáculos, a 5 cuando sí que los hay.
+    public Material normalMaterial;
+    public Material frozenMaterial;
 
-Ahora voy a probar a activar las colisiones entre los agentes, para ver si, dejándolos entrenar un rato, desarrollan algún comportamiento interesante (activando la casilla correspondiente en la matriz de colisiones del proyecto).
+    void Start()
+    {
+        rBody = GetComponent<Rigidbody>();
+    }
 
-RUN-ID: SelfPlay_NoTools_7
+    public override void Initialize()
+    {
+        this.MaxStep = 5000;
+    }
 
-Vale, tras 140k pasos de entrenamiento, vemos cómo los agentes no han desarrollado ninguna habilidad increíble (que involucre el uso de las colisiones entre agentes para "empujarse"). Voy a probar a dar recompensa al rival cuando un agente se choque con un obstáculo o una pared (a ver si acaba deduciendo que le puede beneficiar eso).
+    public override void OnEpisodeBegin()
+    {
+        agentRunSpeed = normalAgentRunSpeed;
+        currentToolStamina = maximumToolStamina;
+        recoveryStatus = recoverySteps;
+        Unfreeze();
+        rBody.velocity = Vector3.zero;
+        transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
+        transform.localRotation = Quaternion.identity;
+        if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) == 0)
+        {
+            this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 10;
+        } else
+        {
+            this.gameObject.GetComponent<DecisionRequester>().DecisionPeriod = 5; // 5 es el bueno para entrenar
+        }
+        finishedEpisodes++;
+    }
 
-RUN-ID: SelfPlay_NoTools_8
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        // Agent position
+        sensor.AddObservation(transform.localPosition.x);
+        sensor.AddObservation(transform.localPosition.z);
 
-Vale, he hecho que, cuando un agente colisione con un obstáculo o una pared, éste tenga una penalización de -30, y su rival tenga una recompensa de +5. No conseguimos nada espectacular parece. Por el momento voy a dejar esta recompensa adicional, por si más adelante acaba siendo interesante.
+        // Agent rotation
+        sensor.AddObservation(transform.localRotation.y);
+
+        // Tool stamina (normalizado)
+        sensor.AddObservation(currentToolStamina / maximumToolStamina);
+    }
+
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+    {
+        MoveAgent(actionBuffers.DiscreteActions);
+        float multiplier = 1f;
+        //if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) > 0) multiplier = 1f;
+        AddReward(-0.01f * multiplier);
+    }
+
+    public void MoveAgent(ActionSegment<int> act)
+    {
+        if (currentToolStamina < maximumToolStamina) currentToolStamina++;
+        if (recoveryStatus < recoverySteps) recoveryStatus++;
+        if (recoveryStatus >= recoverySteps && isFrozen)
+        {
+            Unfreeze();
+        }
+
+        if (isFrozen) return;
+
+        if (currentToolStamina < maximumToolStamina)
+        {
+            agentRunSpeed = frozenAgentRunSpeed;
+        } else
+        {
+            agentRunSpeed = normalAgentRunSpeed;
+        }
+
+        var dirToGo = Vector3.zero;
+        var rotateDir = Vector3.zero;
+
+        var action = act[0];
+        switch (action)
+        {
+            case 1:
+                dirToGo = transform.forward * 1f;
+                break;
+            case 2:
+                dirToGo = transform.forward * -1f;
+                break;
+            case 3:
+                rotateDir = transform.up * 1f;
+                break;
+            case 4:
+                rotateDir = transform.up * -1f;
+                break;
+            case 5:
+                if (currentToolStamina >= maximumToolStamina && !isFrozen)
+                {
+                    // usar herramienta
+                    currentToolStamina = 0;
+                    UseTool();
+                }
+                break;
+        }
+        transform.Rotate(rotateDir, Time.deltaTime * 150f);
+        rBody.AddForce(dirToGo * agentRunSpeed, ForceMode.VelocityChange);
+    }
+
+    public override void Heuristic(in ActionBuffers actionsOut)
+    {
+        var discreteActionsOut = actionsOut.DiscreteActions;
+        discreteActionsOut[0] = 0;
+        if (Input.GetKey(KeyCode.D))
+        {
+            discreteActionsOut[0] = 3;
+        }
+        else if (Input.GetKey(KeyCode.W))
+        {
+            discreteActionsOut[0] = 1;
+        }
+        else if (Input.GetKey(KeyCode.A))
+        {
+            discreteActionsOut[0] = 4;
+        }
+        else if (Input.GetKey(KeyCode.S))
+        {
+            discreteActionsOut[0] = 2;
+        } else if (Input.GetKey(KeyCode.Space))
+        {
+            discreteActionsOut[0] = 5;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("target"))
+        {
+            SetReward(100f);
+            OtherAgent.SetReward(-50f);
+            //targetsReached++;
+            //if (targetsReached % 100 == 0)
+            //{
+            //    Debug.Log("Success rate: " + (targetsReached * 1.0f / finishedEpisodes));
+            //}
+            AgentManager.EndEpisodes();
+        }
+        else if (other.CompareTag("wall"))
+        {
+            SetReward(-30f);
+            OtherAgent.AddReward(5f);
+            //Debug.Log("Wall crash");
+            ResetPosition();
+        }
+        else if (other.CompareTag("obstacle"))
+        {
+            SetReward(-30f);
+            OtherAgent.AddReward(5f);
+            //Debug.Log("Obstacle crash");
+            ResetPosition();
+        }
+    }
+
+    private void UseTool()
+    {
+        OtherAgent.Freeze();
+    }
+
+    private void ResetPosition()
+    {
+        transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
+        transform.localRotation = Quaternion.identity;
+    }
+
+    public void Freeze()
+    {
+        if (this.isFrozen) return;
+        if (recoveryStatus < recoverySteps) return;
+        
+        recoveryStatus = 0;
+        this.isFrozen = true;
+        this.GetComponent<MeshRenderer>().material = frozenMaterial;
+    }
+
+    public void Unfreeze()
+    {
+        if (!this.isFrozen) return;
+
+        recoveryStatus = recoverySteps;
+        this.isFrozen = false;
+        this.GetComponent<MeshRenderer>().material = normalMaterial;
+    }
+}
+
+```
+
+Ahora mismo, cada agente está congelado 100 steps, y la herramienta se resetea en 200 steps. Mientras la herramienta se carga, el agente en cuestión va a una velocidad menor (5 de normal, 2 en este caso). Esto genera que, cuando el agente congelado se recupera, hay un periodo de 100 steps en los que el agente víctima tiene velocidad normal, y el otro va lento (lo normal es que el primer agente congele al otro nada más descongelarse, igual podría cambiarse esto para que no pueda usar la herramienta nada más descongelarse).
+
+El problema de esta herramienta es que su uso es tan "barato" que al final la utilizan todo el rato.
+
+RUN-ID: SelfPlay_FreezeTool_11
+
+Creo que esta tool es una herramienta, no da pie a ningun tipo de estrategia divertida. Creo que es por el hecho de que los agentes pueden utilizarla en cualquier momento. Sería más interesante tener algo tipo disparo para freezear a los rivales, o que solo pueda freezear a su rival cuando este se encuentre dentro de un radio (que el agente se tenga que acercar al agente rival). Esta herramienta (freezeo sin más) es una mierda, no da para nada.
+
+Creo que la del disparo es la que más factible parece. Podría hacer que el agente disparase bolas relativamente grandes, para facilitar el disparo. Y que los rayos de los agentes que detectan los rivales tengan esferas más grandes, para poder detectar más facilmente a sus rivales.
+
+Otra idea (que es la siguiente que voy a probar): que la herramienta consista en lanzar un "halo" de fuerza en todas las direcciones, de forma que podamos impulsar el agente rival. Podríamos hacer que cuanto más cerca esté mayor sea el impulso (de esta forma evitamos un uso desmesurado de esta herramienta).
 
 
 
