@@ -14,7 +14,7 @@ public class BasicAgent : Agent
     private static int maximumToolStamina = 200;
     private static int recoverySteps = 100; // steps needed to unfreeze after being frozen
     private static float normalAgentRunSpeed = 5f;
-    private static float frozenAgentRunSpeed = 2f;
+    private static float frozenAgentRunSpeed = 5f;
 
     public AgentManager AgentManager;
     public BasicAgent OtherAgent;
@@ -70,6 +70,9 @@ public class BasicAgent : Agent
 
         // Tool stamina (normalizado)
         sensor.AddObservation(currentToolStamina / maximumToolStamina);
+
+        // Is frozen
+        sensor.AddObservation(isFrozen);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -82,7 +85,7 @@ public class BasicAgent : Agent
 
     public void MoveAgent(ActionSegment<int> act)
     {
-        if (currentToolStamina < maximumToolStamina) currentToolStamina++;
+        //if (currentToolStamina < maximumToolStamina) currentToolStamina++;
         if (recoveryStatus < recoverySteps) recoveryStatus++;
         if (recoveryStatus >= recoverySteps && isFrozen)
         {
@@ -120,12 +123,16 @@ public class BasicAgent : Agent
             case 5:
                 if (currentToolStamina >= maximumToolStamina && !isFrozen)
                 {
-                    // usar herramienta
-                    currentToolStamina = 0;
-                    UseTool();
+                    if (transform.localPosition.z < OtherAgent.transform.localPosition.z)
+                    {
+                        // usar herramienta
+                        currentToolStamina = 0;
+                        UseTool();
+                    }
                 }
                 break;
         }
+
         transform.Rotate(rotateDir, Time.deltaTime * 150f);
         rBody.AddForce(dirToGo * agentRunSpeed, ForceMode.VelocityChange);
     }
