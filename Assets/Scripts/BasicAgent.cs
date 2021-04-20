@@ -78,6 +78,7 @@ public class BasicAgent : Agent
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         MoveAgent(actionBuffers.DiscreteActions);
+        if (OtherAgent.isActiveAndEnabled) return;
         float multiplier = 1f;
         //if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) > 0) multiplier = 1f;
         AddReward(-0.01f * multiplier);
@@ -167,10 +168,17 @@ public class BasicAgent : Agent
     {
         if (other.CompareTag("target"))
         {
-            SetReward(100f);
             if (OtherAgent.isActiveAndEnabled)
             {
-                OtherAgent.SetReward(-50f); 
+                SetReward(1);
+                //OtherAgent.SetReward(-50f); 
+                OtherAgent.SetReward(-1); 
+            } 
+            else
+            {
+                // está solo
+                SetReward(100f);
+                EndEpisode();
             }
             //targetsReached++;
             //if (targetsReached % 100 == 0)
@@ -181,23 +189,35 @@ public class BasicAgent : Agent
         }
         else if (other.CompareTag("wall"))
         {
-            SetReward(-30f);
             if (OtherAgent.isActiveAndEnabled)
             {
-                OtherAgent.AddReward(5f);
+                SetReward(-1f);
+                OtherAgent.AddReward(1f);
+                AgentManager.EndEpisodes();
+            } 
+            else
+            {
+                SetReward(-30f);
+                EndEpisode();
             }
             //Debug.Log("Wall crash");
-            ResetPosition();
+            //ResetPosition();
         }
         else if (other.CompareTag("obstacle"))
         {
-            SetReward(-30f);
             if (OtherAgent.isActiveAndEnabled)
             {
-                OtherAgent.AddReward(5f);
+                SetReward(-1f);
+                OtherAgent.AddReward(1f);
+                AgentManager.EndEpisodes();
+            }
+            else
+            {
+                SetReward(-30f);
+                EndEpisode();
             }
             //Debug.Log("Obstacle crash");
-            ResetPosition();
+            //ResetPosition();
         }
     }
 
