@@ -42,27 +42,27 @@ environment_parameters:
     curriculum:
       - name: NoObstacles # The '-' is important as this is a list
         completion_criteria:
-          measure: progress
+          measure: reward
           behavior: BasicAgent
           signal_smoothing: false
-          min_lesson_length: 1
-          threshold: 0.01 # 30k pasos
+          min_lesson_length: 200
+          threshold: 95 # 30k pasos
         value: 0.0
       - name: OneObstacle # The '-' is important as this is a list
         completion_criteria:
-          measure: progress
+          measure: reward
           behavior: BasicAgent
           signal_smoothing: true
-          min_lesson_length: 1
-          threshold: 0.07 # 70k pasos
+          min_lesson_length: 200
+          threshold: 85 # 70k pasos
         value: 1.0
       - name: TwoObstacles # This is the start of the second lesson
         completion_criteria:
-          measure: progress
+          measure: reward
           behavior: BasicAgent
           signal_smoothing: true
-          min_lesson_length: 1
-          threshold: 0.1 # 100k pasos
+          min_lesson_length: 200
+          threshold: 85 # 100k pasos
           require_reset: true
         value: 2.0
       - name: ThreeObstacles

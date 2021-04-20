@@ -1618,6 +1618,8 @@ MonoBehaviour:
   targetTransform: {fileID: 2091417708}
   AgentManager: {fileID: 0}
   OtherAgent: {fileID: 0}
+  normalMaterial: {fileID: 0}
+  frozenMaterial: {fileID: 0}
 --- !u!114 &1212785449
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1811,6 +1813,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_RootOrder
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2767890696979118513, guid: a8bdc4b315abc6645a29dd182e0556c8,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 2927846870388703932, guid: a8bdc4b315abc6645a29dd182e0556c8,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2938709851507858742, guid: a8bdc4b315abc6645a29dd182e0556c8,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3290635395185101082, guid: a8bdc4b315abc6645a29dd182e0556c8,
         type: 3}
@@ -3305,12 +3322,12 @@ PrefabInstance:
     - target: {fileID: 6902776320027352329, guid: a8bdc4b315abc6645a29dd182e0556c8,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.45
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6902776320027352329, guid: a8bdc4b315abc6645a29dd182e0556c8,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -10
+      value: -13.5
       objectReference: {fileID: 0}
     - target: {fileID: 6902776320027352438, guid: a8bdc4b315abc6645a29dd182e0556c8,
         type: 3}
@@ -3387,6 +3404,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9210638752301948091, guid: a8bdc4b315abc6645a29dd182e0556c8,
+        type: 3}
+      propertyPath: m_Model
+      value: 
+      objectReference: {fileID: 5022602860645237092, guid: 94a702a5ed41bbd45be2e7a8f17a9349,
+        type: 3}
     - target: {fileID: 9210638752301948091, guid: a8bdc4b315abc6645a29dd182e0556c8,
         type: 3}
       propertyPath: m_BehaviorType

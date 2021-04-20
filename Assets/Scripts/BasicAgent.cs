@@ -47,7 +47,7 @@ public class BasicAgent : Agent
         recoveryStatus = recoverySteps;
         Unfreeze();
         rBody.velocity = Vector3.zero;
-        transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
+        transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -13.5f);
         transform.localRotation = Quaternion.identity;
         if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) == 0)
         {
@@ -123,6 +123,7 @@ public class BasicAgent : Agent
             case 5:
                 if (currentToolStamina >= maximumToolStamina && !isFrozen)
                 {
+                    if (!OtherAgent.isActiveAndEnabled) break;
                     if (transform.localPosition.z < OtherAgent.transform.localPosition.z)
                     {
                         // usar herramienta
@@ -167,7 +168,10 @@ public class BasicAgent : Agent
         if (other.CompareTag("target"))
         {
             SetReward(100f);
-            OtherAgent.SetReward(-50f);
+            if (OtherAgent.isActiveAndEnabled)
+            {
+                OtherAgent.SetReward(-50f); 
+            }
             //targetsReached++;
             //if (targetsReached % 100 == 0)
             //{
@@ -178,14 +182,20 @@ public class BasicAgent : Agent
         else if (other.CompareTag("wall"))
         {
             SetReward(-30f);
-            OtherAgent.AddReward(5f);
+            if (OtherAgent.isActiveAndEnabled)
+            {
+                OtherAgent.AddReward(5f);
+            }
             //Debug.Log("Wall crash");
             ResetPosition();
         }
         else if (other.CompareTag("obstacle"))
         {
             SetReward(-30f);
-            OtherAgent.AddReward(5f);
+            if (OtherAgent.isActiveAndEnabled)
+            {
+                OtherAgent.AddReward(5f);
+            }
             //Debug.Log("Obstacle crash");
             ResetPosition();
         }
@@ -198,7 +208,7 @@ public class BasicAgent : Agent
 
     private void ResetPosition()
     {
-        transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -11);
+        transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -13.5f);
         transform.localRotation = Quaternion.identity;
     }
 
