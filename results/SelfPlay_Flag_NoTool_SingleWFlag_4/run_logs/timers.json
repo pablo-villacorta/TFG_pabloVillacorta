@@ -1,0 +1,49 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1619041628",
+        "python_version": "3.7.9 (tags/v3.7.9:13c94747c7, Aug 17 2020, 18:58:18) [MSC v.1900 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\pablo\\Documents\\Universidad\\TFG\\venv_tfg\\Scripts\\mlagents-learn config/basic_config.yaml --run-id=SelfPlay_Flag_NoTool_SingleWFlag_4 --resume",
+        "mlagents_version": "0.24.0",
+        "mlagents_envs_version": "0.24.0",
+        "communication_protocol_version": "1.4.0",
+        "pytorch_version": "1.7.1+cu110",
+        "numpy_version": "1.20.1",
+        "end_time_seconds": "1619041636"
+    },
+    "total": 8.483771699999998,
+    "count": 1,
+    "self": 0.04159889999999855,
+    "children": {
+        "run_training.setup": {
+            "total": 0.15668190000000015,
+            "count": 1,
+            "self": 0.15668190000000015
+        },
+        "TrainerController.start_learning": {
+            "total": 8.2854909,
+            "count": 1,
+            "self": 0.00015130000000063148,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 8.0722142,
+                    "count": 1,
+                    "self": 8.0722142
+                },
+                "TrainerController._save_models": {
+                    "total": 0.21312539999999913,
+                    "count": 1,
+                    "self": 0.015614999999998602,
+                    "children": {
+                        "RLTrainer._checkpoint": {
+                            "total": 0.19751040000000053,
+                            "count": 1,
+                            "self": 0.19751040000000053
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -9,6 +9,8 @@ TagManager:
   - obstacle
   - agent
   - corridorWall
+  - corridorExit
+  - flag
   layers:
   - Default
   - TransparentFX

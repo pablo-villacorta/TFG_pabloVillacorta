@@ -7,9 +7,11 @@ public class AgentManager : MonoBehaviour
 {
     public BasicAgent Agent1, Agent2;
     public List<GameObject> obstacles;
-    public GameObject CorridorWalls;
+    public GameObject flag;
 
     private Vector3 agent1pos, agent2pos;
+
+    public bool flagAvailable;
 
     private void Awake()
     {
@@ -22,8 +24,7 @@ public class AgentManager : MonoBehaviour
             obstacles[i].transform.position = new Vector3(100000, old.y, old.z);
         }
 
-        old = CorridorWalls.transform.position;
-        CorridorWalls.transform.position = new Vector3(100000, old.y, old.z);
+        SpawnFlag();
     }
 
     public void EndEpisodes()
@@ -35,6 +36,7 @@ public class AgentManager : MonoBehaviour
         } 
         ResetAgentPositions();
         SpawnObstacles();
+        SpawnFlag();
     }
 
     private void ResetAgentPositions()
@@ -56,17 +58,29 @@ public class AgentManager : MonoBehaviour
 
     private void SpawnObstacles()
     {
-        int activeObstacles = (int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 1.0f);
+        int activeObstacles = (int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 3.0f);
 
         for (int i = 0; i < activeObstacles; i++)
         {
             obstacles[i].GetComponent<StaticObstacle>().Spawn();
         }
+    }
 
-        if (activeObstacles > 0)
-        {
-            CorridorWalls.transform.localPosition = new Vector3(0.0546920598f, 1.22981977f, -10.5799999f);
-        }
+    public void SpawnFlag()
+    {
+        float x = Random.Range(-8.7f, 8.7f);
+        float y = 0.8f;
+        float z = Random.Range(-3.36f, -1.68f);
+        if (Random.value > 0.5f) z += 4.98f;
+        flag.transform.localPosition = new Vector3(x, y, z);
+        flagAvailable = true;
+    }
+
+    public void RemoveFlag()
+    {
+        flagAvailable = false;
+        var oldPos = flag.transform.localPosition;
+        flag.transform.localPosition = new Vector3(oldPos.x, -10, oldPos.z);
     }
 
 }

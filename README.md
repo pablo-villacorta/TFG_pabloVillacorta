@@ -1,51 +1,188 @@
-# Self Play - Corridor (no se puede morir dentro) con freeze
+# Self Play - Pañuelito v1
 
-### Qué hacer ahora
+Vale, vamos a intentar jugar con el pañuelito. He puesto una capsula verde a modo de pañuelito, se posiciona al principio de cada episodio en el hueco que hay entre los obstáculos (en el código se ven las coordenadas):
 
-Se me ocurren varias ideas:
+```c#
+public void SpawnFlag()
+    {
+        float x = Random.Range(-8.7f, 8.7f);
+        float y = 0.8f;
+        float z = Random.Range(-3.36f, -1.68f);
+        if (Random.value > 0.5f) z += 4.98f;
+        flag.transform.localPosition = new Vector3(x, y, z);
+        flagAvailable = true;
+    }
+```
 
-1. Basándome en este mismo escenario, rehacer todo con los siguientes cambios:
-   - Las paredes del corridor no son "letales" (chocar con ellas no provoca nada)
-   - Los límites de pista antes del corridor tampoco son letales 
-     - Todo esto lo hago para forzar a los agentes a salir del corridor
-2. Una vez implementado 1 y habiendo probado pequeñas variaciones, probar esta otra idea (en una branch nueva): el pañuelito. La idea es que ambos agentes empiezan abajo, y ponemos un pañuelito en un punto concreto del escenario. El objetivo de los agentes es coger el primero el pañuelito y llegar al target con él. Si el otro agente ha cogido antes el pañuelito, el objetivo del agente será "robárselo", intentando chocar con él. Si chocan, el agente que no había cogido el pañuelito gana. Este escenario puede ser interesante porque los comportamientos tienen varias "fases" y variaciones (primero, llegar el primero al pañuelito; luego, dependiendo de si lo ha cogido o no, hacer una cosa u otra). Este escenario puede ser muy interesante.
+Tengo el siguiente esquema de recompensas:
 
-## Idea 1: que  no se pueda ganar sin salir del corridor
+```c#
+private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("wall"))
+        {
+            if (OtherAgent.isActiveAndEnabled)
+            {
+                SetReward(-1f);
+                OtherAgent.AddReward(1f);
+            } 
+            else
+            {
+                SetReward(-10f);
+            }
+            
+            AgentManager.EndEpisodes();
+            //Debug.Log("Wall crash");
+            //ResetPosition();
+        }
+        else if (other.CompareTag("obstacle"))
+        {
+            if (OtherAgent.isActiveAndEnabled)
+            {
+                SetReward(-1f);
+                OtherAgent.AddReward(1f);
+            }
+            else
+            {
+                SetReward(-10f);
+            }
 
-He implementado la idea 1. Vuelvo a repetir el procedimiento realizado con la versión anterior: 
+            AgentManager.EndEpisodes();
+            //Debug.Log("Obstacle crash");
+            //ResetPosition();
+        }
+        else if (other.CompareTag("flag"))
+        {
+            hasFlag = true;
+            this.GetComponent<MeshRenderer>().material = flagMaterial;
 
-- en el yaml, comento la parte de self play
-- en unity, desactivo los agentes rosas
+            if (!OtherAgent.isActiveAndEnabled)
+            {
+                // está solo
+                SetReward(20f);
+                AgentManager.RemoveFlag();
+                return;
+            }
 
-De esta forma, el agente se hace más o menos bueno él solo. Lo dejo entrenando un rato, y cuando ya sea más o menos bueno, activo el self play y el agente rosa, y que aprendan a competir (esta vez deberían acabar dejándose salir, porque es la única forma de obtener una recompensa, tanto positiva como negativa).
+            SetReward(0.01f);
+            AgentManager.RemoveFlag();
+        }
+    }
 
-RUN-ID: SelfPlay_FreezeTool_Corridor_9
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("target"))
+        {
+            if (hasFlag)
+            {
+                if (OtherAgent.isActiveAndEnabled)
+                {
+                    SetReward(1);
+                    OtherAgent.SetReward(-1);
+                }
+                else
+                {
+                    // está solo
+                    SetReward(100f);
+                }
+                
+                AgentManager.EndEpisodes();
+                return;
+            }
+        }
+        else if (collision.collider.CompareTag("corridorWall"))
+        {
+            if (OtherAgent.isActiveAndEnabled) return;
+            SetReward(-30f);
+            EndEpisode();
+            AgentManager.SpawnFlag();
+        } else if (collision.collider.CompareTag("agent"))
+        {
+            if (!OtherAgent.isActiveAndEnabled) return;
 
-Vale, ha estado entrenadno unos 650k steps solo. Ahora activo self play y el agente rosa y lo dejo entrenando un buen rato. A ver qué emerge...
+            if (!hasFlag && OtherAgent.hasFlag)
+            {
+                SetReward(1f);
+                OtherAgent.SetReward(-1f);
+                AgentManager.EndEpisodes();
+            }
+        }
+    }
+```
 
-Pues, a los 2M de steps, claramente no hay estrategia. Tenemos ELO por debajo del inicial (1170). Ahora los agentes tratan de salir rápidamente del corridor, pero aun así no logran encontrar una manera de encontrar la herramienta de forma que les proporcione una ventaja sustancial sobre el otro.
+Y de momento he hecho que el agente solo tenga 5 acciones posibles (las de moverse, no hay herramienta de momento). Si vemos que es necesaria una herramienta para el agente que no ha cogido el pañuelito (para poder pillar al otro más facilmente, porque quizás sea demasiado complicado sin ninguna ayuda externa).
 
-Tal y como está ahora no va a emerger ninguna estrategia, porque sinceramente creo que no existe. Lo único que se me ocurre que podría dar algo que hacer en este escenario podría ser que solo tenga disponible la herramienta el último en salir del corridor. Voy a probar esto, y en caso de que no funcione, pasamos a  probar lo del pañuelito.
+Le paso al agente las siguientes observaciones:
 
-Vale, lo he parado.
+```c#
+public override void CollectObservations(VectorSensor sensor)
+    {
+        // Agent position
+        sensor.AddObservation(transform.localPosition.x);
+        sensor.AddObservation(transform.localPosition.z);
 
-Ahora, he implementado lo descrito en el parrafo anterior. He añadido un trigger a la salida del corridor, por defecto el currentToolStatus está a 0 en ambos agentes, y al entrar al trigger de salida del corridor se comprueba si hemos sido los primeros o los segundos en salir del mismo. En caso de ser los segundos, currentToolStatus se pone al máximo (para poder usarlo una vez).
+        // Agent rotation
+        sensor.AddObservation(transform.localRotation.y);
 
-Vale, en vez de reentrenar el bicho en solitario de cero, voy a intentar tomar donde lo dejé en el ejemplo anterior (2M steps, SelfPlay_FreezeTool_Corridor_9), y a ver si aprenden esta nueva situación.
+        // Tool stamina (normalizado)
+        sensor.AddObservation(currentToolStamina / maximumToolStamina);
 
-RUN-ID: SelfPlay_FreezeTool_Corridor_9 --resume (tras 2M steps con la nueva configuración).
+        // Is frozen
+        sensor.AddObservation(isFrozen);
 
-Vale, no me ha dejado reentrenar (no sé por qué). Nada, no me deja. Puesh abrá que hacerlo de cero...
+        // Flag
+        sensor.AddObservation(hasFlag);
+        sensor.AddObservation(AgentManager.flagAvailable);
+    }
+```
 
-RUN-ID: SelfPlay_FreezeTool_Corridor_16
+Por último, he añadido al componente de raycasting ya existente llamado RayPerceptionSensorOtherAgent una segunda etiqueta a detectar: flag (la que tiene asignada el gameobject verde que hace de pañuelito). Ese componente detecta tanto al otro agente como al pañuelito (no he cambiado ninguna propiedad del mismo, ni numero de rayos ni angulo ni nada).
 
-Vale, tras encontrarme con bastantes problemas para que algente aprendiera a psar del corridor (estando él solo), he llegado a la conclusión de que el problema estaba en que el castigo por chocarse con los obstáculos y paredes era demasiado alto (-30), por lo que el agente prefería quedarse quieto antes de intentar explorar. Ahora, lo he puesto a -10, y el agente ya está dando con la tecla (antes ni con 200k pasos lograba aprender, ahora a los 50k ya entiende de qué va la cosa, con 1 obstáculo al menos). Lo dejo un rato más para que afine y aprenda con 2 y 3 obstáculos, y probamos el competitivo con un único agente que puede usar la herramienta (el último en salir del corridor). Si esto no lleva a ninguna estrategia, cambiamos al escenario del pañuelito.
+Entreno inicialmente un modelo sin LSTM para que el agente (en solitario, rosa desactivado) aprenda a buscar el pañuelito y a llevarlo al target (una vez lo ha cogido). Desde la primera lesson de CL estoy incluyendo la lógica del pañuelito, de forma que el llegar al target no hace nada a no ser que se tenga el pañuelito.
 
-Vale, lo he dejado entrenando en solitario 565k pasos. Ha llegado a los 3 obstáculos y con un mean reward de 80+. Con eso vale de momento. Ahora activo self play y el agente rosa.
+RUN-ID: SelfPlay_Flag_NoTool_1
 
-Vale, lo he dejado entrenando con self play durante 3M steps (casi). Resultado: apenas hay estrategia. Básicamente, utilizar la herramienta tan pronto como esté disponible (al salir del corridor). Esta es una estrategia de media da buenos resultados, siempre y cuando el agente que va por delante no tenga una ventaja demasiado grande. Los agentes no intentan, por ejemplo, empujar al rival para que se choque con un obstáculo. A veces se quedan atascados en la salida del corridor (no caben los dos a la vez).
+Tras 1.5M steps, tenemos un mean reward de unos 108 puntos (máximo posible 120). El agente en solitario lo hace relativamente bien, no lo hace perfecto, pero teniendo en cuenta que no tiene LSTM está relativamente bien (no puede recordar por dónde ha mirado). Creo que con esto puede ser suficiente para probar si la idea del pañuelito nos sirve.
 
-Creo que este escenario no me va a permitir ir mucho más allá. Voy a probar a implementar el pañuelito.
+Además, he descubierto que el comando mlagents-learn tiene una opción --initialize-from que me permite crear un nuevo modelo tomando como base otro modelo ya entrenado (en vez de tener que hacer cambios y después --resume, así queda más elegante y nos permite entrenar aún más el modelo base en solitario si vemos que necesitar refinarse).
+
+Activo self play y el agente rosa (y confío en que el código c# funcione como espero que lo haga).
+
+Vale, he lanzado el siguiente comando: mlagents-learn config/basic_config.yaml --run-id=SelfPlay_Flag_noTool_Multi_2 --initialize-from=SelfPlay_Flag_NoTool_1
+
+Habiendolo dejado entrenar 75k pasos, queda en evidencia que sigue habiendo una importante ventaja posicional. El que llega primero al pañuelito tiene todas las de ganar. Para equilibrarlo, puedo probar a reducir un poquito la velocidad del agente que ha cogido el pañuelo (para que el otro pueda pillarlo). De momento no lo voy a hacer, voy a dejarlo un par de millones de pasos. Si veo que no mejora, implemento un cambio en la velocidad (que la velocidad del agente que tiene el pañuelo se reduzca en un 20% o algo así).
+
+Otra cosa que veo es que hay demasiado pocos rayos para detectar al agente rival. Si está medianamente lejos, es poco probable que lo vea (los rayos se van separando a medida que se alejan del agente origen).
+
+No tiene mala pinta. Creo que ya empeiza a pillar que el que no pilla el pañuelito tiene que ir a por el otro (lo digo habiendo entrenado multi agente durante 900k steps). Lo voy a dejar un buen rato más. Si veo que no mejora del todo, pruebo a meter más rayos que detecten agentes y flags (esto hay que hacerlo fijo, si está medianamente lejos no detecta nada), y añadir más complejidad a la red, ya sea:
+
+- metiendo una capa intermedia adicional
+- más hidden units
+- LSTM??? (igual complica demasiado las cosas, idk) pero puede que sea improtante, porque pasa que un agente va hacia un flag, pero de repente se le cuela el rival en medio, y deja de ver el flag, y al no tener memoria, se desorienta totalmente..
+- Igual puedo meter CL al entrenamiento multiagente. Que varíe la velocidad del agente que ha cogido al pañuelito (comienza lento, para que pueda deducir más facilmente que la tarea del otro agente es pillarle), que vaya de más lenta a más rápida.
+
+Conclusiones tras casi 3M de steps de entrenamiento, vemos pequeñas trazas de estrategia, pero los agentes en realidad están bastante perdidos. Para empezar, la experimentación es bastante pobre (encontrar y llegar al pañuelito les cuesta demasiado. Luego, se siguen pensando que cuando la observación correspondiente a que el pañuelito está disponible es la que les hace saber si tienen que ir al target o no (en verdad debería ser la combinación entre hasFlag y flagAvailable). Por último, hay que meter penalización existencial (aunque sea mínima), porque a veces hacen cosas muy raras, como que un agente que está solo frente al pañuelito no lo coge,  se queda esperando, aún cuando no está cerca el agente rival.
+
+## Entrenando por partes
+
+### Parte 1: solo agente, sin pañuelito
+
+Que el agente aprenda a llegar de un lado al otro (igual que el escenario básico con obstáculos estáticos).
+
+RUN-ID: SelfPlay_Flag_NoTool_Single_4 (entrenado durante 300k)
+
+### Parte 2: solo agente, con pañuelito
+
+Ahora el agente tiene que reentrenarse para pasar primero por el pañuelito, y luego ya hacer como hacía antes. 
+
+RUN-ID: SelfPlay_Flag_NoTool_SingleWFlag_5 (entrenado durante 1M steps)
+
+Ahora tenemos un agente que recoge el pañuelito y lo lleva al otro lado de forma muy optimizada. Este modelo va a poder utilizarse como base de todas las pruebas que hagamos con el juego del pañuelito ya en versión competitiva (lo podemos reutilizar todas las veces que necesitemos, en modo single player lo hace prácticamente perfecto - 112 de media sobre un máximo de 120).
+
+### TO-DO:
+
+- La próxima vez que entrene un modelo basado en este del pañuelito (desde cero), quitar las observaciones innecesarias (isFrozen, currentToolStamina, etc.).
+- Cambiar la forma en la que se entrena el agente individual para el pañuelito: comenzar de 0 a 3 obstáculos sin pañuelito. Cuando ya domine el ir de un lado al otro esquivando obstáculos, meter la funcionalidad del pañuelito (igual así se facilita el proceso de búsqueda del pañuelo, haciendo que por defecto recorra de abajo a arriba el escenario, que cuando vea el pañuelo vaya a por él, y luego siga yendo hacia el target - también te digo, cuando metamos el pañuelito empezará a buscarlo directamente, en vez de empezar recorriendo de abajo a arriba, me imagino).
 
 
 

@@ -28,8 +28,11 @@ public class BasicAgent : Agent
     private bool isFrozen;
     public bool hasExitedCorridor;
 
+    public bool hasFlag;
+
     public Material normalMaterial;
     public Material frozenMaterial;
+    public Material flagMaterial;
 
     void Start()
     {
@@ -44,10 +47,16 @@ public class BasicAgent : Agent
     public override void OnEpisodeBegin()
     {
         hasExitedCorridor = false;
+
+        hasFlag = false;
+        //hasFlag = true; // quitar esto
+        //AgentManager.RemoveFlag(); // quitar esto
+
         agentRunSpeed = normalAgentRunSpeed;
         currentToolStamina = 0;
         recoveryStatus = recoverySteps;
         Unfreeze();
+        this.GetComponent<MeshRenderer>().material = normalMaterial;
         rBody.velocity = Vector3.zero;
         transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -13.5f);
         transform.localRotation = Quaternion.identity;
@@ -70,11 +79,15 @@ public class BasicAgent : Agent
         // Agent rotation
         sensor.AddObservation(transform.localRotation.y);
 
-        // Tool stamina (normalizado)
-        sensor.AddObservation(currentToolStamina / maximumToolStamina);
+        //// Tool stamina (normalizado)
+        //sensor.AddObservation(currentToolStamina / maximumToolStamina);
 
-        // Is frozen
-        sensor.AddObservation(isFrozen);
+        //// Is frozen
+        //sensor.AddObservation(isFrozen);
+
+        // Flag
+        sensor.AddObservation(hasFlag);
+        sensor.AddObservation(AgentManager.flagAvailable);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -89,21 +102,21 @@ public class BasicAgent : Agent
     public void MoveAgent(ActionSegment<int> act)
     {
         //if (currentToolStamina < maximumToolStamina) currentToolStamina++;
-        if (recoveryStatus < recoverySteps) recoveryStatus++;
-        if (recoveryStatus >= recoverySteps && isFrozen)
-        {
-            Unfreeze();
-        }
+        //if (recoveryStatus < recoverySteps) recoveryStatus++;
+        //if (recoveryStatus >= recoverySteps && isFrozen)
+        //{
+        //    Unfreeze();
+        //}
 
-        if (isFrozen) return;
+        //if (isFrozen) return;
 
-        if (currentToolStamina < maximumToolStamina)
-        {
-            agentRunSpeed = frozenAgentRunSpeed;
-        } else
-        {
-            agentRunSpeed = normalAgentRunSpeed;
-        }
+        //if (currentToolStamina < maximumToolStamina)
+        //{
+        //    agentRunSpeed = frozenAgentRunSpeed;
+        //} else
+        //{
+        //    agentRunSpeed = normalAgentRunSpeed;
+        //}
 
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
@@ -123,18 +136,18 @@ public class BasicAgent : Agent
             case 4:
                 rotateDir = transform.up * -1f;
                 break;
-            case 5:
-                if (currentToolStamina >= maximumToolStamina && !isFrozen)
-                {
-                    if (!OtherAgent.isActiveAndEnabled) break;
-                    if (transform.localPosition.z < OtherAgent.transform.localPosition.z)
-                    {
-                        // usar herramienta
-                        currentToolStamina = 0;
-                        UseTool();
-                    }
-                }
-                break;
+            //case 5:
+            //    if (currentToolStamina >= maximumToolStamina && !isFrozen)
+            //    {
+            //        if (!OtherAgent.isActiveAndEnabled) break;
+            //        if (transform.localPosition.z < OtherAgent.transform.localPosition.z)
+            //        {
+            //            // usar herramienta
+            //            currentToolStamina = 0;
+            //            UseTool();
+            //        }
+            //    }
+            //    break;
         }
 
         transform.Rotate(rotateDir, Time.deltaTime * 150f);
@@ -160,48 +173,28 @@ public class BasicAgent : Agent
         else if (Input.GetKey(KeyCode.S))
         {
             discreteActionsOut[0] = 2;
-        } else if (Input.GetKey(KeyCode.Space))
-        {
-            discreteActionsOut[0] = 5;
         }
+        //} else if (Input.GetKey(KeyCode.Space))
+        //{
+        //    discreteActionsOut[0] = 5;
+        //}
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("target"))
-        {
-            if (OtherAgent.isActiveAndEnabled)
-            {
-                SetReward(1);
-                //OtherAgent.SetReward(-50f); 
-                OtherAgent.SetReward(-1); 
-            } 
-            else
-            {
-                // está solo
-                SetReward(100f);
-                EndEpisode();
-            }
-            //targetsReached++;
-            //if (targetsReached % 100 == 0)
-            //{
-            //    Debug.Log("Success rate: " + (targetsReached * 1.0f / finishedEpisodes));
-            //}
-            AgentManager.EndEpisodes();
-        }
-        else if (other.CompareTag("wall"))
+        if (other.CompareTag("wall"))
         {
             if (OtherAgent.isActiveAndEnabled)
             {
                 SetReward(-1f);
                 OtherAgent.AddReward(1f);
-                AgentManager.EndEpisodes();
             } 
             else
             {
-                SetReward(-10f);
-                EndEpisode();
+                SetReward(-30f);
             }
+            
+            AgentManager.EndEpisodes();
             //Debug.Log("Wall crash");
             //ResetPosition();
         }
@@ -211,37 +204,71 @@ public class BasicAgent : Agent
             {
                 SetReward(-1f);
                 OtherAgent.AddReward(1f);
-                AgentManager.EndEpisodes();
             }
             else
             {
-                SetReward(-10f);
-                EndEpisode();
+                SetReward(-30f);
             }
+
+            AgentManager.EndEpisodes();
             //Debug.Log("Obstacle crash");
             //ResetPosition();
         }
-        else if (other.CompareTag("corridorExit"))
+        else if (other.CompareTag("flag"))
         {
-            if (!OtherAgent.isActiveAndEnabled) return;
-            if (!this.hasExitedCorridor)
+            hasFlag = true;
+            this.GetComponent<MeshRenderer>().material = flagMaterial;
+
+            if (!OtherAgent.isActiveAndEnabled)
             {
-                hasExitedCorridor = true;
-                if (OtherAgent.hasExitedCorridor)
-                {
-                    currentToolStamina = maximumToolStamina;
-                }
+                // está solo
+                SetReward(20f);
+                AgentManager.RemoveFlag();
+                return;
             }
+
+            SetReward(0.01f);
+            AgentManager.RemoveFlag();
         }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.collider.CompareTag("corridorWall"))
+        if (collision.collider.CompareTag("target"))
+        {
+            if (hasFlag)
+            {
+                if (OtherAgent.isActiveAndEnabled)
+                {
+                    SetReward(1);
+                    OtherAgent.SetReward(-1);
+                }
+                else
+                {
+                    // está solo
+                    SetReward(100f);
+                }
+                
+                AgentManager.EndEpisodes();
+                return;
+            }
+        }
+        else if (collision.collider.CompareTag("corridorWall"))
         {
             if (OtherAgent.isActiveAndEnabled) return;
             SetReward(-30f);
             EndEpisode();
+            AgentManager.SpawnFlag();
+        } else if (collision.collider.CompareTag("agent"))
+        {
+            if (!OtherAgent.isActiveAndEnabled) return;
+
+            if (!hasFlag && OtherAgent.hasFlag)
+            {
+                SetReward(1f);
+                OtherAgent.SetReward(-1f);
+                AgentManager.EndEpisodes();
+            }
         }
     }
 
