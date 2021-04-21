@@ -27,3 +27,25 @@ Pues, a los 2M de steps, claramente no hay estrategia. Tenemos ELO por debajo de
 
 Tal y como está ahora no va a emerger ninguna estrategia, porque sinceramente creo que no existe. Lo único que se me ocurre que podría dar algo que hacer en este escenario podría ser que solo tenga disponible la herramienta el último en salir del corridor. Voy a probar esto, y en caso de que no funcione, pasamos a  probar lo del pañuelito.
 
+Vale, lo he parado.
+
+Ahora, he implementado lo descrito en el parrafo anterior. He añadido un trigger a la salida del corridor, por defecto el currentToolStatus está a 0 en ambos agentes, y al entrar al trigger de salida del corridor se comprueba si hemos sido los primeros o los segundos en salir del mismo. En caso de ser los segundos, currentToolStatus se pone al máximo (para poder usarlo una vez).
+
+Vale, en vez de reentrenar el bicho en solitario de cero, voy a intentar tomar donde lo dejé en el ejemplo anterior (2M steps, SelfPlay_FreezeTool_Corridor_9), y a ver si aprenden esta nueva situación.
+
+RUN-ID: SelfPlay_FreezeTool_Corridor_9 --resume (tras 2M steps con la nueva configuración).
+
+Vale, no me ha dejado reentrenar (no sé por qué). Nada, no me deja. Puesh abrá que hacerlo de cero...
+
+RUN-ID: SelfPlay_FreezeTool_Corridor_16
+
+Vale, tras encontrarme con bastantes problemas para que algente aprendiera a psar del corridor (estando él solo), he llegado a la conclusión de que el problema estaba en que el castigo por chocarse con los obstáculos y paredes era demasiado alto (-30), por lo que el agente prefería quedarse quieto antes de intentar explorar. Ahora, lo he puesto a -10, y el agente ya está dando con la tecla (antes ni con 200k pasos lograba aprender, ahora a los 50k ya entiende de qué va la cosa, con 1 obstáculo al menos). Lo dejo un rato más para que afine y aprenda con 2 y 3 obstáculos, y probamos el competitivo con un único agente que puede usar la herramienta (el último en salir del corridor). Si esto no lleva a ninguna estrategia, cambiamos al escenario del pañuelito.
+
+Vale, lo he dejado entrenando en solitario 565k pasos. Ha llegado a los 3 obstáculos y con un mean reward de 80+. Con eso vale de momento. Ahora activo self play y el agente rosa.
+
+Vale, lo he dejado entrenando con self play durante 3M steps (casi). Resultado: apenas hay estrategia. Básicamente, utilizar la herramienta tan pronto como esté disponible (al salir del corridor). Esta es una estrategia de media da buenos resultados, siempre y cuando el agente que va por delante no tenga una ventaja demasiado grande. Los agentes no intentan, por ejemplo, empujar al rival para que se choque con un obstáculo. A veces se quedan atascados en la salida del corridor (no caben los dos a la vez).
+
+Creo que este escenario no me va a permitir ir mucho más allá. Voy a probar a implementar el pañuelito.
+
+
+

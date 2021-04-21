@@ -1,0 +1,49 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1618992508",
+        "python_version": "3.7.9 (tags/v3.7.9:13c94747c7, Aug 17 2020, 18:58:18) [MSC v.1900 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\pablo\\Documents\\Universidad\\TFG\\venv_tfg\\Scripts\\mlagents-learn config/basic_config.yaml --run-id=SelfPlay_FreezeTool_Corridor_10 --resume",
+        "mlagents_version": "0.24.0",
+        "mlagents_envs_version": "0.24.0",
+        "communication_protocol_version": "1.4.0",
+        "pytorch_version": "1.7.1+cu110",
+        "numpy_version": "1.20.1",
+        "end_time_seconds": "1618992517"
+    },
+    "total": 8.6747054,
+    "count": 1,
+    "self": 0.040989700000000795,
+    "children": {
+        "run_training.setup": {
+            "total": 0.17273929999999993,
+            "count": 1,
+            "self": 0.17273929999999993
+        },
+        "TrainerController.start_learning": {
+            "total": 8.4609764,
+            "count": 1,
+            "self": 0.0002691000000005772,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 8.2518866,
+                    "count": 1,
+                    "self": 8.2518866
+                },
+                "TrainerController._save_models": {
+                    "total": 0.20882069999999864,
+                    "count": 1,
+                    "self": 0.015047599999997274,
+                    "children": {
+                        "RLTrainer._checkpoint": {
+                            "total": 0.19377310000000136,
+                            "count": 1,
+                            "self": 0.19377310000000136
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

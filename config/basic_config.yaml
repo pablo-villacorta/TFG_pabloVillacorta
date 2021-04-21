@@ -22,9 +22,9 @@ behaviors:
         gamma: 0.99
         strength: 1.0
       # gail: 
-      #   strength: 0.01
+      #   strength: 0.1
       #   gamma: 0.99
-      #   demo_path: Assets/Demonstrations/Demo5.demo
+      #   demo_path: Assets/Demonstrations/Corridor1.demo
       #   use_actions: false
       #   use_vail: false
     self_play:

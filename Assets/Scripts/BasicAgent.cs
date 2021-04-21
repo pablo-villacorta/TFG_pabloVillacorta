@@ -26,6 +26,7 @@ public class BasicAgent : Agent
     private int recoveryStatus;
 
     private bool isFrozen;
+    public bool hasExitedCorridor;
 
     public Material normalMaterial;
     public Material frozenMaterial;
@@ -42,8 +43,9 @@ public class BasicAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        hasExitedCorridor = false;
         agentRunSpeed = normalAgentRunSpeed;
-        currentToolStamina = maximumToolStamina;
+        currentToolStamina = 0;
         recoveryStatus = recoverySteps;
         Unfreeze();
         rBody.velocity = Vector3.zero;
@@ -197,7 +199,7 @@ public class BasicAgent : Agent
             } 
             else
             {
-                SetReward(-30f);
+                SetReward(-10f);
                 EndEpisode();
             }
             //Debug.Log("Wall crash");
@@ -213,11 +215,23 @@ public class BasicAgent : Agent
             }
             else
             {
-                SetReward(-30f);
+                SetReward(-10f);
                 EndEpisode();
             }
             //Debug.Log("Obstacle crash");
             //ResetPosition();
+        }
+        else if (other.CompareTag("corridorExit"))
+        {
+            if (!OtherAgent.isActiveAndEnabled) return;
+            if (!this.hasExitedCorridor)
+            {
+                hasExitedCorridor = true;
+                if (OtherAgent.hasExitedCorridor)
+                {
+                    currentToolStamina = maximumToolStamina;
+                }
+            }
         }
     }
 
