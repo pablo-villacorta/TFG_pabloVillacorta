@@ -221,6 +221,16 @@ public class BasicAgent : Agent
         }
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("corridorWall"))
+        {
+            if (OtherAgent.isActiveAndEnabled) return;
+            SetReward(-30f);
+            EndEpisode();
+        }
+    }
+
     private void UseTool()
     {
         OtherAgent.Freeze();

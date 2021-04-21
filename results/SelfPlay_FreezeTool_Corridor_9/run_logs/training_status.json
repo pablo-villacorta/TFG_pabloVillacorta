@@ -1,0 +1,53 @@
+{
+    "active_obstacles": {
+        "lesson_num": 3
+    },
+    "max_obstacle_speed": {
+        "lesson_num": 0
+    },
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 634632,
+                "file_path": "results\\SelfPlay_FreezeTool_Corridor_9\\BasicAgent\\BasicAgent-634632.onnx",
+                "reward": null,
+                "creation_time": 1618959728.069715
+            },
+            {
+                "steps": 999978,
+                "file_path": "results\\SelfPlay_FreezeTool_Corridor_9\\BasicAgent\\BasicAgent-999978.onnx",
+                "reward": -0.09090909090909091,
+                "creation_time": 1618987609.1081944
+            },
+            {
+                "steps": 1499966,
+                "file_path": "results\\SelfPlay_FreezeTool_Corridor_9\\BasicAgent\\BasicAgent-1499966.onnx",
+                "reward": 1.0,
+                "creation_time": 1618989557.1352434
+            },
+            {
+                "steps": 1999954,
+                "file_path": "results\\SelfPlay_FreezeTool_Corridor_9\\BasicAgent\\BasicAgent-1999954.onnx",
+                "reward": 0.2,
+                "creation_time": 1618991506.669292
+            },
+            {
+                "steps": 2011574,
+                "file_path": "results\\SelfPlay_FreezeTool_Corridor_9\\BasicAgent\\BasicAgent-2011574.onnx",
+                "reward": null,
+                "creation_time": 1618991552.296591
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2011574,
+            "file_path": "results\\SelfPlay_FreezeTool_Corridor_9\\BasicAgent.onnx",
+            "reward": null,
+            "creation_time": 1618991552.296591
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}

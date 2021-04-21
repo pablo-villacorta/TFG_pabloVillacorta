@@ -8,6 +8,7 @@ TagManager:
   - target
   - obstacle
   - agent
+  - corridorWall
   layers:
   - Default
   - TransparentFX
