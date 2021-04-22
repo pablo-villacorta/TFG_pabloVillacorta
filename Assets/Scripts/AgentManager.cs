@@ -69,7 +69,7 @@ public class AgentManager : MonoBehaviour
     public void SpawnFlag()
     {
         float x = Random.Range(-8.7f, 8.7f);
-        float y = 0.8f;
+        float y = 0.801f;
         float z = Random.Range(-3.36f, -1.68f);
         if (Random.value > 0.5f) z += 4.98f;
         flag.transform.localPosition = new Vector3(x, y, z);

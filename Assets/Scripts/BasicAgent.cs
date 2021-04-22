@@ -93,7 +93,11 @@ public class BasicAgent : Agent
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         MoveAgent(actionBuffers.DiscreteActions);
-        if (OtherAgent.isActiveAndEnabled) return;
+        if (OtherAgent.isActiveAndEnabled)
+        {
+            AddReward(-0.00001f);
+            return;
+        }
         float multiplier = 1f;
         //if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) > 0) multiplier = 1f;
         AddReward(-0.01f * multiplier);

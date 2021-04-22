@@ -1,177 +1,14 @@
-# Self Play - Pañuelito v1
-
-Vale, vamos a intentar jugar con el pañuelito. He puesto una capsula verde a modo de pañuelito, se posiciona al principio de cada episodio en el hueco que hay entre los obstáculos (en el código se ven las coordenadas):
-
-```c#
-public void SpawnFlag()
-    {
-        float x = Random.Range(-8.7f, 8.7f);
-        float y = 0.8f;
-        float z = Random.Range(-3.36f, -1.68f);
-        if (Random.value > 0.5f) z += 4.98f;
-        flag.transform.localPosition = new Vector3(x, y, z);
-        flagAvailable = true;
-    }
-```
-
-Tengo el siguiente esquema de recompensas:
-
-```c#
-private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("wall"))
-        {
-            if (OtherAgent.isActiveAndEnabled)
-            {
-                SetReward(-1f);
-                OtherAgent.AddReward(1f);
-            } 
-            else
-            {
-                SetReward(-10f);
-            }
-            
-            AgentManager.EndEpisodes();
-            //Debug.Log("Wall crash");
-            //ResetPosition();
-        }
-        else if (other.CompareTag("obstacle"))
-        {
-            if (OtherAgent.isActiveAndEnabled)
-            {
-                SetReward(-1f);
-                OtherAgent.AddReward(1f);
-            }
-            else
-            {
-                SetReward(-10f);
-            }
-
-            AgentManager.EndEpisodes();
-            //Debug.Log("Obstacle crash");
-            //ResetPosition();
-        }
-        else if (other.CompareTag("flag"))
-        {
-            hasFlag = true;
-            this.GetComponent<MeshRenderer>().material = flagMaterial;
-
-            if (!OtherAgent.isActiveAndEnabled)
-            {
-                // está solo
-                SetReward(20f);
-                AgentManager.RemoveFlag();
-                return;
-            }
-
-            SetReward(0.01f);
-            AgentManager.RemoveFlag();
-        }
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.collider.CompareTag("target"))
-        {
-            if (hasFlag)
-            {
-                if (OtherAgent.isActiveAndEnabled)
-                {
-                    SetReward(1);
-                    OtherAgent.SetReward(-1);
-                }
-                else
-                {
-                    // está solo
-                    SetReward(100f);
-                }
-                
-                AgentManager.EndEpisodes();
-                return;
-            }
-        }
-        else if (collision.collider.CompareTag("corridorWall"))
-        {
-            if (OtherAgent.isActiveAndEnabled) return;
-            SetReward(-30f);
-            EndEpisode();
-            AgentManager.SpawnFlag();
-        } else if (collision.collider.CompareTag("agent"))
-        {
-            if (!OtherAgent.isActiveAndEnabled) return;
-
-            if (!hasFlag && OtherAgent.hasFlag)
-            {
-                SetReward(1f);
-                OtherAgent.SetReward(-1f);
-                AgentManager.EndEpisodes();
-            }
-        }
-    }
-```
-
-Y de momento he hecho que el agente solo tenga 5 acciones posibles (las de moverse, no hay herramienta de momento). Si vemos que es necesaria una herramienta para el agente que no ha cogido el pañuelito (para poder pillar al otro más facilmente, porque quizás sea demasiado complicado sin ninguna ayuda externa).
-
-Le paso al agente las siguientes observaciones:
-
-```c#
-public override void CollectObservations(VectorSensor sensor)
-    {
-        // Agent position
-        sensor.AddObservation(transform.localPosition.x);
-        sensor.AddObservation(transform.localPosition.z);
-
-        // Agent rotation
-        sensor.AddObservation(transform.localRotation.y);
-
-        // Tool stamina (normalizado)
-        sensor.AddObservation(currentToolStamina / maximumToolStamina);
-
-        // Is frozen
-        sensor.AddObservation(isFrozen);
-
-        // Flag
-        sensor.AddObservation(hasFlag);
-        sensor.AddObservation(AgentManager.flagAvailable);
-    }
-```
-
-Por último, he añadido al componente de raycasting ya existente llamado RayPerceptionSensorOtherAgent una segunda etiqueta a detectar: flag (la que tiene asignada el gameobject verde que hace de pañuelito). Ese componente detecta tanto al otro agente como al pañuelito (no he cambiado ninguna propiedad del mismo, ni numero de rayos ni angulo ni nada).
-
-Entreno inicialmente un modelo sin LSTM para que el agente (en solitario, rosa desactivado) aprenda a buscar el pañuelito y a llevarlo al target (una vez lo ha cogido). Desde la primera lesson de CL estoy incluyendo la lógica del pañuelito, de forma que el llegar al target no hace nada a no ser que se tenga el pañuelito.
-
-RUN-ID: SelfPlay_Flag_NoTool_1
-
-Tras 1.5M steps, tenemos un mean reward de unos 108 puntos (máximo posible 120). El agente en solitario lo hace relativamente bien, no lo hace perfecto, pero teniendo en cuenta que no tiene LSTM está relativamente bien (no puede recordar por dónde ha mirado). Creo que con esto puede ser suficiente para probar si la idea del pañuelito nos sirve.
-
-Además, he descubierto que el comando mlagents-learn tiene una opción --initialize-from que me permite crear un nuevo modelo tomando como base otro modelo ya entrenado (en vez de tener que hacer cambios y después --resume, así queda más elegante y nos permite entrenar aún más el modelo base en solitario si vemos que necesitar refinarse).
-
-Activo self play y el agente rosa (y confío en que el código c# funcione como espero que lo haga).
-
-Vale, he lanzado el siguiente comando: mlagents-learn config/basic_config.yaml --run-id=SelfPlay_Flag_noTool_Multi_2 --initialize-from=SelfPlay_Flag_NoTool_1
-
-Habiendolo dejado entrenar 75k pasos, queda en evidencia que sigue habiendo una importante ventaja posicional. El que llega primero al pañuelito tiene todas las de ganar. Para equilibrarlo, puedo probar a reducir un poquito la velocidad del agente que ha cogido el pañuelo (para que el otro pueda pillarlo). De momento no lo voy a hacer, voy a dejarlo un par de millones de pasos. Si veo que no mejora, implemento un cambio en la velocidad (que la velocidad del agente que tiene el pañuelo se reduzca en un 20% o algo así).
-
-Otra cosa que veo es que hay demasiado pocos rayos para detectar al agente rival. Si está medianamente lejos, es poco probable que lo vea (los rayos se van separando a medida que se alejan del agente origen).
-
-No tiene mala pinta. Creo que ya empeiza a pillar que el que no pilla el pañuelito tiene que ir a por el otro (lo digo habiendo entrenado multi agente durante 900k steps). Lo voy a dejar un buen rato más. Si veo que no mejora del todo, pruebo a meter más rayos que detecten agentes y flags (esto hay que hacerlo fijo, si está medianamente lejos no detecta nada), y añadir más complejidad a la red, ya sea:
-
-- metiendo una capa intermedia adicional
-- más hidden units
-- LSTM??? (igual complica demasiado las cosas, idk) pero puede que sea improtante, porque pasa que un agente va hacia un flag, pero de repente se le cuela el rival en medio, y deja de ver el flag, y al no tener memoria, se desorienta totalmente..
-- Igual puedo meter CL al entrenamiento multiagente. Que varíe la velocidad del agente que ha cogido al pañuelito (comienza lento, para que pueda deducir más facilmente que la tarea del otro agente es pillarle), que vaya de más lenta a más rápida.
-
-Conclusiones tras casi 3M de steps de entrenamiento, vemos pequeñas trazas de estrategia, pero los agentes en realidad están bastante perdidos. Para empezar, la experimentación es bastante pobre (encontrar y llegar al pañuelito les cuesta demasiado. Luego, se siguen pensando que cuando la observación correspondiente a que el pañuelito está disponible es la que les hace saber si tienen que ir al target o no (en verdad debería ser la combinación entre hasFlag y flagAvailable). Por último, hay que meter penalización existencial (aunque sea mínima), porque a veces hacen cosas muy raras, como que un agente que está solo frente al pañuelito no lo coge,  se queda esperando, aún cuando no está cerca el agente rival.
+# Self Play - Pañuelito v2
 
 ## Entrenando por partes
 
-### Parte 1: solo agente, sin pañuelito
+### Parte 1: solo agente, sin pañuelito [hecho en el commit anterior]
 
 Que el agente aprenda a llegar de un lado al otro (igual que el escenario básico con obstáculos estáticos).
 
 RUN-ID: SelfPlay_Flag_NoTool_Single_4 (entrenado durante 300k)
 
-### Parte 2: solo agente, con pañuelito
+### Parte 2: solo agente, con pañuelito [hecho en el commit anterior]
 
 Ahora el agente tiene que reentrenarse para pasar primero por el pañuelito, y luego ya hacer como hacía antes. 
 
@@ -179,10 +16,53 @@ RUN-ID: SelfPlay_Flag_NoTool_SingleWFlag_5 (entrenado durante 1M steps)
 
 Ahora tenemos un agente que recoge el pañuelito y lo lleva al otro lado de forma muy optimizada. Este modelo va a poder utilizarse como base de todas las pruebas que hagamos con el juego del pañuelito ya en versión competitiva (lo podemos reutilizar todas las veces que necesitemos, en modo single player lo hace prácticamente perfecto - 112 de media sobre un máximo de 120).
 
-### TO-DO:
+### Parte 3: entrenar competitivo
 
-- La próxima vez que entrene un modelo basado en este del pañuelito (desde cero), quitar las observaciones innecesarias (isFrozen, currentToolStamina, etc.).
-- Cambiar la forma en la que se entrena el agente individual para el pañuelito: comenzar de 0 a 3 obstáculos sin pañuelito. Cuando ya domine el ir de un lado al otro esquivando obstáculos, meter la funcionalidad del pañuelito (igual así se facilita el proceso de búsqueda del pañuelo, haciendo que por defecto recorra de abajo a arriba el escenario, que cuando vea el pañuelo vaya a por él, y luego siga yendo hacia el target - también te digo, cuando metamos el pañuelito empezará a buscarlo directamente, en vez de empezar recorriendo de abajo a arriba, me imagino).
+#### Parte 3a: entrenar directamente competitivo
+
+Vamos a probar esto. Lo pruebo antes que el 3b porque pienso que en el 3b es posible que ningun agente acabe queriendo coger el pañuelito, al proporcionarle una desventaja significativa al ir más lento que su rival.
+
+```c#
+public override void OnActionReceived(ActionBuffers actionBuffers)
+    {
+        MoveAgent(actionBuffers.DiscreteActions);
+        if (OtherAgent.isActiveAndEnabled)
+        {
+            AddReward(-0.00001f);
+            return;
+        }
+        float multiplier = 1f;
+        AddReward(-0.01f * multiplier);
+    }
+```
+
+He metido una pequeña penalización existencial (-0.00001f) para intentar que los agentes no pierdan demasiado el tiempo (en el readme anterior llegué a la conclusión de que quizás fuera necesario, tras los 3M steps de entrenamiento).
+
+Activo los agentes rosas, el self play, y quito el CL (empiezan entrenando directamente con 3 obstáculos). A ver qué tal...
+
+RUN-ID: SelfPlay_Flag_NoTool_Multi_3 (entrenado 3M steps)
+
+Vale, tenemos algo que más o menos ha entendido cómo funciona el juego. El problema? Creo que reside en la función de recompensas. Tras 1.5M steps de entrenamiento, los agentes tienen "miedo" a coger el pañuelito: han llegado a la conclusión de que es más rentable no cogerlo y después pillar al que lo ha cogido. Se quedan constantemente esperando el uno al otro ("calma tensa"). Podría hacer que la máxima recompensa solo pueda ser conseguida al coger el pañuelito y llegar al otro lado, y que, en caso de que te pillen, el castigo sea menor (y la recompensa del que ha "cazado" al otro también es menor que la recompensa cuando se coge el pañuelito y se llega al target). De esta forma, quizás podría alentar a los agentes coger el pañuelito (también podría aumentar la recompensa por cogerlo). Otra opción sería aumentar la penalización existencial. 
+
+Pero este modelo es bastante prometedor. El mero hecho de quedarse esperando en vez de coger el pañuelito hace ver que los agentes han "llegado a la conclusión" de que es mejor dejar que el otro coja el pañuelo. También es destacable el hecho de que han aprendido a empujarse el uno al otro para ganar sin tener que hacer uso del pañuelito (empujar al otro hacia un obstáculo o hacia una pared).
+
+**Prueba**
+
+Paro el entrenamiento de SelfPlay_Flag_NoTool_Multi_3, creo un nuevo modelo basado en este y aumento la penalización existencial. Pongo algo significativamente más heavy. A ver si conseguimos que esa "calma tensa" desaparezca metiendo prisa a los agentes... Igual podemos forzarles a que se empujen el uno al otro. Y también podemos aumentar la recompensa por coger el pañuelito... De esta forma siempre tendrá cierta ventaja (en términos de recompensa) aquel agente que coja el pañuelo. Vamos a probar...
+
+#### Parte 3b: entrenar competitivo pero el agente con pañuelito va más lento
+
+Descartamos este escenario, hemos solucionado el problema de "deducir" que lo que hay que hacer si no coges el pañuelito es ir a por el otro (gracias a que hemos metido más raycasting con esferas de mayor tamaño, por lo que es más facil encontrar al rival y seguirlo). En el modelo del apartado 3a se ve claramente que lo deducen.
 
 
+
+
+
+## Posibles ideas si vemos que falla
+
+- Yo de momento creo que las dos primeras fases del entrenamiento (single agent sin y con pañuelito) están bastante bien tal y como están entrenados SelfPlay_Flag_NoTool_Single_4 y SelfPlay_Flag_NoTool_SingleWFlag_5. De cambiar algo, supongo que sería el entrenamiento multi agente.
+- Dentro del multiagente:
+  - Probar a hacer que el agente que haya cogido el pañuelito vea su velocidad reducida (un 10 o 20%, por ejemplo, de forma que el otro agente tenga más posibilidades de aprender que tiene que pillarlo - si no, es muy dificil que le pille las suficientes veces como para aprender que es eso lo que tiene que hacer).
+  - Entrenar multi agente con menos obstáculos (empezar con 1 o 2, entrenar el modelo y luego entrenar uno nuevo con 3 obstáculos). 
+  - Igual meter un poco de lstm (habría que reentrenar todo de 0). De esta forma, los agentes pueden recordar dónde estaba el rival antes de que cojan el pañuelito (si no, muchas veces no saben si cogerlo o no porque no ven al rival, que puede estar al otro lado del pañuelito). También puede servir para predecir el movimiento del rival para "pillarlo".
 
