@@ -56,7 +56,7 @@ public class AgentManager : MonoBehaviour
 
     private void SpawnObstacles()
     {
-        int activeObstacles = (int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 1.0f);
+        int activeObstacles = (int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 3.0f);
 
         for (int i = 0; i < activeObstacles; i++)
         {

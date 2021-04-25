@@ -47,5 +47,13 @@ Vale, lo he dejado entrenando con self play durante 3M steps (casi). Resultado: 
 
 Creo que este escenario no me va a permitir ir mucho más allá. Voy a probar a implementar el pañuelito.
 
+# UPDATE
+
+He cogido SelfPlay_FreezeTool_Corridor_16 y he creado un nuevo modelo a partir de él, SelfPlay_FreezeTool_Corridor_17. Lo he dejado entrenando durante 6+M de steps. El modelo generado al final de dicho entrenamiento hacía que los agentes nunca salieran de la sala (saben que el que sale primero tiene mayor probabilidad de perder, así que ninguno quiere salir primero). sin embargo, si cogemos el modelo generado con tan solo 1.6M de entrenamiento, vemos una actividad mucho más interesante, en la que los agentes más o menos juegan como lo haría un humano. Esto me puede servir para decir que, al entrenar más, los agentes llegan a esa conclusión de que es mejor no salir primero, y por eso juegan tan "mal". También es importante mencionar que no tiene penalización existencial, por lo que no se les está metiendo ningún tipo de prisa.
+
+### TO-DO
+
+- Probar a reentrenar SelfPlay_FreezeTool_Corridor_16 con penalización existencial. Para ver si los agentes llegan a la misma conclusión que la versión sin penalización existencial. Esa va a ser la última prueba que voy a hacer.
+
 
 

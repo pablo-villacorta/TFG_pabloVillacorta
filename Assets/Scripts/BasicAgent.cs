@@ -4,6 +4,7 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
+using Unity.MLAgents.Policies;
 
 public class BasicAgent : Agent
 {
@@ -49,7 +50,11 @@ public class BasicAgent : Agent
         recoveryStatus = recoverySteps;
         Unfreeze();
         rBody.velocity = Vector3.zero;
+        //Vector3 pos1, pos2;
+        //pos1 = new Vector3(-7, 0.5f, -13.5f);
+        //pos2 = new Vector3(7, 0.5f, -13.5f);
         transform.localPosition = new Vector3(Random.Range(-9, 9), 0.5f, -13.5f);
+        //transform.localPosition = GetComponent<BehaviorParameters>().TeamId == 1 ? pos1 : pos2;
         transform.localRotation = Quaternion.identity;
         if ((int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 2.0f) == 0)
         {

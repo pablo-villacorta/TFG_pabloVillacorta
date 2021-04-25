@@ -1618,6 +1618,7 @@ MonoBehaviour:
   targetTransform: {fileID: 2091417708}
   AgentManager: {fileID: 0}
   OtherAgent: {fileID: 0}
+  hasExitedCorridor: 0
   normalMaterial: {fileID: 0}
   frozenMaterial: {fileID: 0}
 --- !u!114 &1212785449
@@ -3338,7 +3339,8 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Model
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 5022602860645237092, guid: 8b5537c5fc103ee448a1fdd20bc2cf10,
+        type: 3}
     - target: {fileID: 6902776320027352439, guid: a8bdc4b315abc6645a29dd182e0556c8,
         type: 3}
       propertyPath: m_BehaviorType
@@ -3408,7 +3410,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Model
       value: 
-      objectReference: {fileID: 5022602860645237092, guid: 94a702a5ed41bbd45be2e7a8f17a9349,
+      objectReference: {fileID: 5022602860645237092, guid: 8b5537c5fc103ee448a1fdd20bc2cf10,
         type: 3}
     - target: {fileID: 9210638752301948091, guid: a8bdc4b315abc6645a29dd182e0556c8,
         type: 3}
