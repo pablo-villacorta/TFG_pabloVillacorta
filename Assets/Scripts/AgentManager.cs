@@ -56,7 +56,7 @@ public class AgentManager : MonoBehaviour
         Agent2.transform.localPosition = agent2pos;
     }
 
-    private void SpawnObstacles()
+    public void SpawnObstacles()
     {
         int activeObstacles = (int)Academy.Instance.EnvironmentParameters.GetWithDefault("active_obstacles", 3.0f);
 

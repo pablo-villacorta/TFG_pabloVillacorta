@@ -46,6 +46,11 @@ public class BasicAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        if (!AgentManager.flagAvailable)
+        {
+            AgentManager.SpawnObstacles();
+            AgentManager.SpawnFlag();
+        }
         hasExitedCorridor = false;
 
         hasFlag = false;
@@ -88,6 +93,10 @@ public class BasicAgent : Agent
         // Flag
         sensor.AddObservation(hasFlag);
         sensor.AddObservation(AgentManager.flagAvailable);
+
+        // Freeze state
+        sensor.AddObservation(false);
+        sensor.AddObservation(false);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -95,7 +104,8 @@ public class BasicAgent : Agent
         MoveAgent(actionBuffers.DiscreteActions);
         if (OtherAgent.isActiveAndEnabled)
         {
-            AddReward(-0.00001f);
+            // x10 más de existential penalty
+            AddReward(-0.001f);
             return;
         }
         float multiplier = 1f;
@@ -231,7 +241,7 @@ public class BasicAgent : Agent
                 return;
             }
 
-            SetReward(0.01f);
+            SetReward(0.1f);
             AgentManager.RemoveFlag();
         }
     }
@@ -269,8 +279,9 @@ public class BasicAgent : Agent
 
             if (!hasFlag && OtherAgent.hasFlag)
             {
-                SetReward(1f);
-                OtherAgent.SetReward(-1f);
+                // empate, la única manera de ganar es con el pañuelito
+                SetReward(0f);
+                OtherAgent.SetReward(0f);
                 AgentManager.EndEpisodes();
             }
         }

@@ -1,0 +1,50 @@
+{
+    "max_obstacle_speed": {
+        "lesson_num": 0
+    },
+    "BasicAgent": {
+        "checkpoints": [
+            {
+                "steps": 4999993,
+                "file_path": "results\\SelfPlay_Flag_NoTool_Multi_7\\BasicAgent\\BasicAgent-4999993.onnx",
+                "reward": 0.9613500274717808,
+                "creation_time": 1619287776.8198836
+            },
+            {
+                "steps": 5499979,
+                "file_path": "results\\SelfPlay_Flag_NoTool_Multi_7\\BasicAgent\\BasicAgent-5499979.onnx",
+                "reward": -1.197499968111515,
+                "creation_time": 1619296151.9786923
+            },
+            {
+                "steps": 5999961,
+                "file_path": "results\\SelfPlay_Flag_NoTool_Multi_7\\BasicAgent\\BasicAgent-5999961.onnx",
+                "reward": 0.9580000080168247,
+                "creation_time": 1619299353.92519
+            },
+            {
+                "steps": 6499992,
+                "file_path": "results\\SelfPlay_Flag_NoTool_Multi_7\\BasicAgent\\BasicAgent-6499992.onnx",
+                "reward": 0.5084874727763236,
+                "creation_time": 1619302560.449736
+            },
+            {
+                "steps": 6550997,
+                "file_path": "results\\SelfPlay_Flag_NoTool_Multi_7\\BasicAgent\\BasicAgent-6550997.onnx",
+                "reward": null,
+                "creation_time": 1619302894.2893438
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 6550997,
+            "file_path": "results\\SelfPlay_Flag_NoTool_Multi_7\\BasicAgent.onnx",
+            "reward": null,
+            "creation_time": 1619302894.2893438
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.2.0",
+        "mlagents_version": "0.24.0",
+        "torch_version": "1.7.1+cu110"
+    }
+}
