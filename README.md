@@ -143,14 +143,6 @@ No saben perseguirse. Da la casualidad de que durante el entrenamiento casi siem
 
 Update 6 (tras 6.6M steps): han recuperado un poquito de estrategia, pero la calma tensa ha vuelto (y de qué manera). A no ser que puedan recoger el obstáculo mientras miran hacia arriba (para no perder tiempo girando), son bastante reacios a cogerlo (viendo o no viendo al rival, no pueden saber dónde está).
 
-
-
-#### Parte 3b: entrenar competitivo pero el agente con pañuelito va más lento
-
-Descartamos este escenario, hemos solucionado el problema de "deducir" que lo que hay que hacer si no coges el pañuelito es ir a por el otro (gracias a que hemos metido más raycasting con esferas de mayor tamaño, por lo que es más facil encontrar al rival y seguirlo). En el modelo del apartado 3a se ve claramente que lo deducen.
-
-
-
 # Probando cositas
 
 Voy a probar a entrenar algo de 0. Le voy a meter LSTM y curiosity. La fase inicial del entrenamiento (agente solo con pañuelito - nos saltamos la fase de agente solo sin pañuelito, ya que no la veo muy necesaria). Además he metido 2 observaciones manuales más, por si acaso más adelante quiero meter lo de que se congelen cuando se choquen. De momento esos dos valores son dos "false" sin más. Valores del yaml:
@@ -261,15 +253,15 @@ Cada uno de los siguientes modelos tiene diferentes características (alguno es 
 
 entrenado a partir de SelfPlay_Flag_NoTool_SingleWFlag_8
 
-El agente que pilla gana
+El agente que pilla gana. **Este es de los mejores que tengo**. el del vídeo es este.
 
 ### SelfPlay_Flag_NoTool_Multi_MoreCuriosity_8
 
-Este se ha entrenado a partir del SelfPlay_Flag_NoTool_Multi_7 tras 6.6M steps de entrenamiento. La única diferencia es que este tiene más curiosidad (0.1 de strength). No ha habido beneficios significativos.
+Este se ha entrenado a partir del SelfPlay_Flag_NoTool_Multi_7 tras 6.6M steps de entrenamiento. La única diferencia es que este tiene más curiosidad (0.1 de strength). No ha habido beneficios significativos. Apenas juegan aquí. Se chocan todo el rato hasta que encuentran el equilibrio. Y se quedan así hasta que termina el episodio. 
 
 ### SelfPlay_Flag_NoTool_Multi_8
 
-El agente que pilla empata (solo se puede ganar la recompensa máxima llegando al target con el pañuelito, si no, únicamente puede perder o empatar).
+El agente que pilla empata (solo se puede ganar la recompensa máxima llegando al target con el pañuelito, si no, únicamente puede perder o empatar). Este es bastante malo, no juegan nada bien (sobre todo el que no coge el pañuelito).
 
 
 
